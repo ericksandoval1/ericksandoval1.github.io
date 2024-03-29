@@ -32,3 +32,11 @@ h4 {
 	margin-bottom: 0px;
 	padding-bottom: 0px;
 }
+.half-size {
+    width: 50%;
+    height: auto;
+}
+.sixty-size {
+    width:66%;
+    height: auto;
+}
