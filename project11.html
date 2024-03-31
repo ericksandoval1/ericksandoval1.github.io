@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Website</title>
+    <link rel="stylesheet" href="styles/simple-grid.css">
+    <link rel="stylesheet" href="styles/main.css">
+    <style>
+        /* Add custom CSS for positioning */
+        #p5-canvas-container {
+            position: relative;
+        }  
+        #text-container {
+            position: absolute;
+            top: 0;
+            left: calc(100% + 10px);
+            width: 200px; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row nav_bar">
+            <div class="col-4">
+                <a href="/">Erick Sandoval</a>
+            </div>
+            <div class="col-4">
+                <a href="mailto:ericksandoval1414@gmail.com">Contact</a>
+            </div>
+            <div class="col-4">
+                <a href="about.html">About</a>
+            </div>
+            <div class="col-4">     
+            </div>
+        </div>
+        <div class="row project_page_description">
+            <div class="col-4">
+                <h3>Draw Like A Toddler, 2024</h3>
+                <p class="project_tools">Interactive Program p5.js</p>
+                <!--<p class="project_tools">Paper</p>-->
+            </div>
+            <div class="col-8">
+                <p>Description: I created this interactive game that allows you to draw like a toddler using the p5.js program. Remebering what it was like to draw as a toddler, it would mainly involve drawing with simple shapes and lines. This interactive game allows you to use shapes and lines to create your own toddler art.</p>  
+                <p>Using a Mouse and Keyboard:</p>
+                <p>"1" - Draws a line</p>
+                <p>"2" - Draws a circle</p>
+                <p>"3" - Click and drag mouse to draw a larger circle</p>
+                <p>"4" - Draws a randomly sized square</p>
+                <p>"5" - Click and drag mouse to draw a larger square</p>
+                <p>"Q" - Randomly draws a rectangle on the canvas</p> 
+            </div>
+        </div>
+        <!-- p5.js canvas container -->
+        <div class="row">
+            <div class="col-12">
+                <div id="p5-canvas-container"></div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <script>
+        let shapes = [];
+let isdrawing = false;
+let shapetype = 0;
+let currentcolor;
+let circlesize = 10;
+let squaresize = 10;
+let maxcircle = 100;
+let maxsquare = 100;
+let startx, starty;
+function  setup() {
+  createCanvas(1000,1000);
+  frameRate(30);
+}
+function draw() {
+  background(220);
+  for (let i = 0; i < shapes.length; i++) { shapes[i].display();}
+                                          
+}
+function keyPressed() {
+  if (key === '1') { shapetype = 0;}
+
+else if (key === '2') { shapetype = 1;}
+else if (key === '3') {shapetype = 2;}
+else if (key === '4') {shapetype = 3;}
+else if (key === '5') {shapetype = 4;}
+else if (key === 'q') {addverticalrectangles();}
+}
+function addverticalrectangles() {
+  let recwidth = random(20,80);
+  let recheight = random(height);
+  shapes.push(new rectangleshape(random(width),height,recwidth,recheight, false, color(random(255),random(255),random(255))));
+}
+function mousePressed() {
+  isdrawing = true;
+  currentcolor = color(random(255),random(255),random(255));
+  if (shapetype === 0) {
+    startx = mouseX;
+    starty = mouseY;}
+  else if (shapetype === 1 || shapetype === 2) {
+    circlesize = 10;
+    shapes.push(new circleshape(mouseX,mouseY, currentcolor, circlesize)); 
+  }
+  else if (shapetype === 3) {
+    let size = random(20,100);
+    let issquare = random() > 0.5;
+    shapes.push(new rectangleshape(mouseX,mouseY, size, size, issquare, currentcolor));
+  }
+  else if (shapetype ===4) {
+    squaresize = 10;
+    shapes.push(new squareshape(mouseX, mouseY, currentcolor, squaresize));
+  }
+}
+function mouseDragged() {
+  if (isdrawing && mouseButton === LEFT && shapetype === 0) {
+    shapes.push(new LineShape(startx,starty, mouseX, mouseY, currentcolor));
+    startx = mouseX;
+    starty = mouseY;
+}   else if (isdrawing && mouseButton === LEFT && shapetype === 2) {
+  if (circlesize < maxcircle) {
+    circlesize += 1;
+    shapes[shapes.length - 1].size = circlesize;
+  }
+} else if (isdrawing && mouseButton === LEFT && shapetype === 4) {
+    if (squaresize < maxsquare) {
+      squaresize += 1;
+    }
+    shapes[shapes.length - 1].size = squaresize;
+  }
+
+}
+function mouseReleased() {
+  isdrawing = false;
+}
+class LineShape {
+  constructor(x1,y1,x2,y2,col) {
+    this.x1 = x1;
+    this.y1 = y1;
+    this.x2 = x2;
+    this.y2 = y2;
+    this.color = col;
+  }
+  display() {
+    stroke(this.color);
+    strokeWeight(3);
+    line(this.x1,this.y1,this.x2,this.y2);
+  }
+}
+  class circleshape {
+    constructor(x,y,col,size) {
+      this.x = x;
+      this.y = y;
+      this.size = size;
+      this.color = col;
+    }
+    display() {
+      fill(this.color);
+      noStroke();
+      ellipse(this.x,this.y,this.size);
+    }
+  }
+  class squareshape {
+    constructor(x,y,col,size) {
+      this.x = x;
+      this.y = y;
+      this.size = size;
+      this.color = col;
+    }
+    display() {
+     fill(this.color);
+      noStroke();
+      rectMode(CENTER);
+      rect(this.x,this.y,this.size,this.size);
+    }
+    
+  }
+class rectangleshape {
+  constructor(x,y,w,h,issquare,col)
+  {
+    this.x = x;
+    this.y = y;
+    this.w = w;
+    this.h = issquare ? w : h;
+    this.color = col;
+  }
+  display() {
+    fill(this.color);
+    noStroke();
+    rectMode(CENTER);
+    rect(this.x,this.y,this.w,this.h);
+  }
+}
+
+    </script>
+</body>
+</html>
