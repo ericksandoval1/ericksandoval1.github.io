@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kirby Collaboration</title>
+  <link rel="stylesheet" href="../css/style.css">
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const themes = [
+      "✦ ❋ ⊹ ✺ ✶ ✺ ⊹ ❋ ✦",
+      "⚙️ ⌘ ▓▒░ 01 ⌂ 01 ▓▒░ ⌘ ⚙️",
+        "♡ ❀ ✿ ☁︎ ღ ☁︎ ✿ ❀ ♡",
+        "∞ ⟁ ∴ △ ⌾ △ ∴ ⟁ ∞",
+        "☍ ⚡ ⌬ ≡ ≈ ≡ ⌬ ⚡ ☍"
+      ];
+    
+      let i = 0;
+      setInterval(() => {
+        document.title = themes[i];
+        i = (i + 1) % themes.length;
+      }, 1000); 
+    });
+    </script>
+    </script>
+</head>
+<body>
+
+  <header>
+    <h1><a href="../index.html">Erick Sandoval</a></h1>
+    <nav class="nav-links">
+      <a href="../index.html">Home</a>
+      <!-- <a href="../about.html">About</a> -->
+    </nav>
+  </header>
+
+  <main>
+    <section class="project-detail">
+      <h2>Kirby Collaboration</h2>
+      <p class="description">
+        This project is a collaborative video intended to showcase our different art styles. We chose to create a video where we each contribute 10 seconds of animation in styles such as pixel, 3D, digital drawing, and claymation.
+      </p>
+
+      <div class="image-gallery">
+        <video 
+          class="project-video" 
+          src="../videos/kirby-collab.mp4" 
+          type="video/mp4" 
+          controls 
+          playsinline 
+          preload="metadata"
+        >
+          Sorry, your browser doesn’t support embedded videos.
+        </video>
+      </div>
+
+      <h3>Project Details</h3>
+      <p class="description">
+        1920 x 1080 resolution <br>
+        My Contribution - <br>
+        Adobe Premiere Pro <br>
+        Aseprite <br>
+        Sound from <a href="https://www.101soundboards.com/boards/39821-sound-effects-kirbys-dream-land-miscellaneous-game-boy-gbc" style="text-decoration: underline;">101soundboards</a> <br>
+        Music found <a href="https://www.youtube.com/watch?v=twPSaCABakA" style="text-decoration: underline;">Here  </a>
+
+        
+        
+      </p>
+      
+    </section>
+  </main>
+
+  <footer>
+  </footer>
+
+</body>
+</html>

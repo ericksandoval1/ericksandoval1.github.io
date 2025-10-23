@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Saturday Morning</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const themes = [
+      "✦ ❋ ⊹ ✺ ✶ ✺ ⊹ ❋ ✦",
+      "⚙️ ⌘ ▓▒░ 01 ⌂ 01 ▓▒░ ⌘ ⚙️",
+        "♡ ❀ ✿ ☁︎ ღ ☁︎ ✿ ❀ ♡",
+        "∞ ⟁ ∴ △ ⌾ △ ∴ ⟁ ∞",
+        "☍ ⚡ ⌬ ≡ ≈ ≡ ⌬ ⚡ ☍"
+      ];
+    
+      let i = 0;
+      setInterval(() => {
+        document.title = themes[i];
+        i = (i + 1) % themes.length;
+      }, 1000); 
+    });
+    </script>
+    
+  
+</head>
+<body>
+
+  <header>
+    <h1><a href="../index.html">Erick Sandoval</a></h1>
+    <nav class="nav-links">
+      <a href="../index.html">Home</a>
+      <!-- <a href="../about.html">About</a> -->
+    </nav>
+  </header>
+
+  <main>
+    <section class="project-detail">
+      <h2>Saturday Morning, March 2024</h2>
+      <p class="description">
+        This is a compilation of openings of films and tv shows that I used to watch growing up. These intros are the roots for my affection of nostalgic imagery.
+      </p>
+
+      <div class="image-gallery">
+        <video 
+          class="project-video" 
+          src="../videos/crt.mp4" 
+          type="video/mp4" 
+          controls 
+          playsinline 
+          preload="metadata"
+        >
+          Sorry, your browser doesn’t support embedded videos.
+        </video>
+      </div>
+
+      <h3>Project Details</h3>
+      <p class="description">
+        1920 x 1080 resolution <br>
+        Adobe After Effects <br>
+        Adobe Premiere Pro <br>
+        Found Video from YouTube
+      </p>
+      
+    </section>
+  </main>
+
+  <footer>
+  </footer>
+
+</body>
+</html>

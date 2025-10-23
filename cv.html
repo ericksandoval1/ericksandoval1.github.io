@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CV — Erick Sandoval</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+
+  <!-- Optional: fun rotating tab title (remove if not needed) -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const themes = [
+        "✦ ❋ ⊹ ✺ ✶ ✺ ⊹ ❋ ✦",
+        "⚙️ ⌘ ▓▒░ 01 ⌂ 01 ▓▒░ ⌘ ⚙️",
+        "♡ ❀ ✿ ☁︎ ღ ☁︎ ✿ ❀ ♡",
+        "∞ ⟁ ∴ △ ⌾ △ ∴ ⟁ ∞",
+        "☍ ⚡ ⌬ ≡ ≈ ≡ ⌬ ⚡ ☍"
+      ];
+      let i = 0;
+      setInterval(() => {
+        document.title = `CV — ${themes[i]}`;
+        i = (i + 1) % themes.length;
+      }, 1200);
+    });
+  </script>
+</head>
+<body>
+
+  <header>
+    <h1><a href="../index.html">Erick Sandoval</a></h1>
+    <nav class="nav-links">
+      <a href="../index.html">Home</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="project-detail">
+      <h2>Curriculum Vitae</h2>
+
+
+      <h3>Education</h3>
+      <ul>
+        <li><strong>BFA, Digital Media Art</strong> — San José State University, San José, CA </li>
+      </ul>
+
+      <h3>Skills</h3>
+      <ul>
+        <li>Video editing & compositing (Premiere Pro, After Effects)</li>
+        <li>Web Coding (HTML, CSS, basic JS)</li>
+        <li>Image editing (Photoshop, Lightroom)</li>
+        <li>Pixel based illustration (Aseprite)</li>
+      </ul>
+
+      <h3>Contact</h3>
+      <ul>
+        <li>Email: <a href="mailto:ericksandoval1414@gmail.com">ericksandoval1414@gmail.com</a></li>
+  
+      </ul>
+    </section>
+  </main>
+
+  <footer></footer>
+</body>
+</html>

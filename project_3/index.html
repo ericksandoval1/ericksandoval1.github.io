@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dino Game Demo</title>
+  <link rel="stylesheet" href="../css/style.css">
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const themes = [
+      "✦ ❋ ⊹ ✺ ✶ ✺ ⊹ ❋ ✦",
+      "⚙️ ⌘ ▓▒░ 01 ⌂ 01 ▓▒░ ⌘ ⚙️",
+        "♡ ❀ ✿ ☁︎ ღ ☁︎ ✿ ❀ ♡",
+        "∞ ⟁ ∴ △ ⌾ △ ∴ ⟁ ∞",
+        "☍ ⚡ ⌬ ≡ ≈ ≡ ⌬ ⚡ ☍"
+      ];
+    
+      let i = 0;
+      setInterval(() => {
+        document.title = themes[i];
+        i = (i + 1) % themes.length;
+      }, 1000); 
+    });
+    </script>
+</head>
+<body>
+
+  <header>
+    <h1><a href="../index.html">Erick Sandoval</a></h1>
+    <nav class="nav-links">
+      <a href="../index.html">Home</a>
+      <!-- <a href="../about.html">About</a> -->
+    </nav>
+  </header>
+
+  <main>
+    <section class="project-detail">
+      <h2>Dino Game Demo, May 2025 </h2>
+      <p class="description">
+        Created as a reimagination of the Chrome Dinosaur Game. I made a self-playing video game complete with a new start screen, sounds, and art assets.
+      </p>
+
+      <div class="image-gallery">
+        <video 
+          class="project-video" 
+          src="../videos/dino.mp4" 
+          type="video/mp4" 
+          controls 
+          playsinline 
+          preload="metadata"
+        >
+          Sorry, your browser doesn’t support embedded videos.
+        </video>
+      </div>
+      <h3>Project Details</h3>
+      <p class="description">
+        1280 x 720 resolution <br>
+        Adobe After Effects <br>
+        Adobe Premiere Pro <br>
+        Aseprite <br>
+        
+      </p>
+      
+    </section>
+  </main>
+
+  <footer>
+  </footer>
+
+</body>
+</html>

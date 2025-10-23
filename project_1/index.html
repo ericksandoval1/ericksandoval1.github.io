@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Algorith Lights</title>
+  <link rel="stylesheet" href="../css/style.css">
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const themes = [
+      "✦ ❋ ⊹ ✺ ✶ ✺ ⊹ ❋ ✦",
+      "⚙️ ⌘ ▓▒░ 01 ⌂ 01 ▓▒░ ⌘ ⚙️",
+        "♡ ❀ ✿ ☁︎ ღ ☁︎ ✿ ❀ ♡",
+        "∞ ⟁ ∴ △ ⌾ △ ∴ ⟁ ∞",
+        "☍ ⚡ ⌬ ≡ ≈ ≡ ⌬ ⚡ ☍"
+      ];
+    
+      let i = 0;
+      setInterval(() => {
+        document.title = themes[i];
+        i = (i + 1) % themes.length;
+      }, 1000); 
+    });
+    </script>
+</head>
+<body>
+
+  <header>
+    <h1><a href="../index.html">Erick Sandoval</a></h1>
+    <nav class="nav-links">
+      <a href="../index.html">Home</a>
+      <!-- <a href="../about.html">About</a> -->
+    </nav>
+  </header>
+
+  <main>
+    <section class="project-detail">
+      <h2>Algorith Lights</h2>
+      <p class="description">
+        An exploration of how artificial intelligence redefines collective memory through generative processes.  
+        This project investigates the way neural networks reinterpret archival material, questioning how data-driven
+        models reshape our understanding of memory and history.
+      </p>
+
+      <div class="image-gallery">
+        <img src="../images/p1_panel.png" alt="project image">
+
+      </div>
+    </section>
+  </main>
+
+  <footer>
+  </footer>
+
+</body>
+</html>
