@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Project 5 – Media Sphere</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- A-Frame -->
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <!-- Look-at component -->
+    <script src="https://unpkg.com/aframe-look-at-component@^0.8.0/dist/aframe-look-at-component.min.js"></script>
+
+    <!-- Animated gradient background -->
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow: hidden;
+      }
+
+      body {
+        background: linear-gradient(-45deg, #000000, #261F5C, #8A2BE2, #FF0080);
+        background-size: 400% 400%;
+        animation: gradientAnim 30s ease infinite;
+      }
+
+      @keyframes gradientAnim {
+        0%   { background-position: 0% 50%; }
+        50%  { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+      }
+    </style>
+  </head>
+
+  <body>
+    <a-scene
+      embedded
+      renderer="alpha: true; antialias: true"
+      vr-mode-ui="enabled: false">
+
+      <!-- LIGHTS -->
+      <a-entity light="type: ambient; intensity: 2"></a-entity>
+      <a-entity light="type: directional; intensity: 1" position="0 2 2"></a-entity>
+
+      <!-- ASSETS -->
+      <a-assets>
+        <img id="pic1-img" src="../images/pic1.png" />
+        <img id="pic2-img" src="../images/pic2.png" />
+        <img id="pic3-img" src="../images/pic3.png" />
+        <img id="pic4-img" src="../images/pic4.png" />
+        <img id="pic5-img" src="../images/pic5.png" />
+
+        <img id="merge1-img" src="../images/merge1.png" />
+        <img id="merge2-img" src="../images/merge2.png" />
+        <img id="merge3-img" src="../images/merge3.png" />
+        <img id="merge4-img" src="../images/merge4.png" />
+        <img id="merge5-img" src="../images/merge5.png" />
+
+        <video id="merge1-vid" src="../videos/merge1.mp4" loop muted playsinline></video>
+        <video id="merge2-vid" src="../videos/merge2.mp4" loop muted playsinline></video>
+        <video id="merge3-vid" src="../videos/merge3.mp4" loop muted playsinline></video>
+        <video id="merge4-vid" src="../videos/merge4.mp4" loop muted playsinline></video>
+        <video id="merge5-vid" src="../videos/merge5.mp4" loop muted playsinline></video>
+
+        <video id="vid1-vid" src="../videos/vid1.mp4" loop muted playsinline></video>
+        <video id="vid1-glitch-vid" src="../videos/vid1_glitch.mp4" loop muted playsinline></video>
+        <video id="vid2-vid" src="../videos/vid2.mp4" loop muted playsinline></video>
+        <video id="vid2-glitch-vid" src="../videos/vid2_glitch.mp4" loop muted playsinline></video>
+      </a-assets>
+
+      <!-- CAMERA -->
+      <a-entity id="rig" position="0 1.6 0">
+        <a-camera wasd-controls-enabled="false" look-controls="true"></a-camera>
+      </a-entity>
+    </a-scene>
+
+    <!-- SCRIPT -->
+    <script>
+      window.addEventListener('DOMContentLoaded', function () {
+        const sceneEl = document.querySelector('a-scene');
+        if (!sceneEl) return;
+
+        const imageIds = [
+          'pic1-img','pic2-img','pic3-img','pic4-img','pic5-img',
+          'merge1-img','merge2-img','merge3-img','merge4-img','merge5-img'
+        ];
+
+        const videoIds = [
+          'merge1-vid','merge2-vid','merge3-vid','merge4-vid','merge5-vid',
+          'vid1-vid','vid1-glitch-vid','vid2-vid','vid2-glitch-vid'
+        ];
+
+        const media = [
+          ...imageIds.map(id => ({ kind: 'image', id })),
+          ...videoIds.map(id => ({ kind: 'video', id }))
+        ];
+
+        const centerY = 1.6;
+        const rows = 6;
+        const cols = 16;
+
+        // Precompute chessboard cells (white squares)
+        const cells = [];
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            if ((r + c) % 2 === 0) {
+              cells.push({ row: r, col: c });
+            }
+          }
+        }
+
+        /**
+         * Create one spherical chessboard wall.
+         * radius: distance from center
+         * thetaOffset: extra rotation around Y axis (radians)
+         * latMaxDeg: max latitude (degrees) for this wall
+         * shapeExponent: <1 = push rows toward extremes, 1 = linear
+         */
+        function createWall(radius, thetaOffset, latMaxDeg, shapeExponent) {
+          const latMax = latMaxDeg * Math.PI / 180;
+
+          cells.forEach((cell, index) => {
+            const item = media[index % media.length];
+
+            // v in [0,1] from bottom row to top row
+            const v = cell.row / (rows - 1);
+
+            // map v to t in [-1,1]
+            let t = (v - 0.5) * 2;
+
+            // shape vertical distribution: exponent <1 pushes toward extremes
+            if (shapeExponent && shapeExponent !== 1) {
+              const sign = t >= 0 ? 1 : -1;
+              t = sign * Math.pow(Math.abs(t), shapeExponent);
+            }
+
+            const lat = t * latMax;
+
+            const u = cell.col / cols;
+            const theta = u * Math.PI * 2 + thetaOffset;
+
+            const y = centerY + radius * Math.sin(lat);
+            const rHoriz = radius * Math.cos(lat);
+            const x = rHoriz * Math.sin(theta);
+            const z = -rHoriz * Math.cos(theta);
+            const pos = `${x} ${y} ${z}`;
+
+            // Random fade per panel
+            const dur = 3000 + Math.random() * 4000;      // 3–7 seconds
+            const delay = Math.random() * 3000;           // 0–3 seconds
+            const toOpacity = 0.3 + Math.random() * 0.7;  // 0.3–1.0
+
+            if (item.kind === 'image') {
+              const plane = document.createElement('a-plane');
+              plane.setAttribute('src', '#' + item.id);
+              plane.setAttribute('width', '1.8');
+              plane.setAttribute('height', '3');
+              plane.setAttribute(
+                'material',
+                'shader: flat; transparent: true; opacity: 0; depthTest: true; depthWrite: false'
+              );
+              plane.setAttribute('position', pos);
+              plane.setAttribute('look-at', '#rig');
+
+              plane.setAttribute(
+                'animation__fade',
+                `property: material.opacity;
+                 from: 0; to: ${toOpacity};
+                 dir: alternate;
+                 dur: ${dur};
+                 delay: ${delay};
+                 loop: true;
+                 easing: easeInOutSine`
+              );
+
+              sceneEl.appendChild(plane);
+            } else {
+              const vid = document.createElement('a-video');
+              vid.setAttribute('src', '#' + item.id);
+              vid.setAttribute('width', '3');
+              vid.setAttribute('height', '1.7');
+              vid.setAttribute(
+                'material',
+                'shader: flat; transparent: true; opacity: 0; depthTest: true; depthWrite: false'
+              );
+              vid.setAttribute('position', pos);
+              vid.setAttribute('look-at', '#rig');
+
+              vid.setAttribute(
+                'animation__fade',
+                `property: material.opacity;
+                 from: 0; to: ${toOpacity};
+                 dir: alternate;
+                 dur: ${dur};
+                 delay: ${delay};
+                 loop: true;
+                 easing: easeInOutSine`
+              );
+
+              sceneEl.appendChild(vid);
+            }
+          });
+        }
+
+        // Inner wall: wider vertical spread, pushed to top/bottom (less middle)
+        // latMaxDeg = 45, shapeExponent = 0.5 (push rows away from center)
+        createWall(10, 0, 45, 0.5);
+
+        // Outer wall: normal mid band, rotated 45 degrees around you
+        // latMaxDeg = 25, shapeExponent = 1 (linear distribution)
+        createWall(18, Math.PI / 4, 25, 1);
+
+        // Autoplay videos
+        videoIds.forEach(id => {
+          const v = document.getElementById(id);
+          if (v) v.play().catch(() => {});
+        });
+      });
+    </script>
+  </body>
+</html>
