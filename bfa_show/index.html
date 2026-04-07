@@ -2,540 +2,256 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>BFA Show — Virtual World</title>
+<title>Spiral World</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: #000; overflow: hidden; }
-  canvas { display: block; }
-
-  /* ── HUD ── */
-  #hud {
-    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  body { overflow: hidden; background: #000; }
+  #crosshair {
+    position: fixed; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
     pointer-events: none; z-index: 10;
   }
-  #crosshair {
-    position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 20px; height: 20px;
-  }
   #crosshair::before, #crosshair::after {
-    content: ''; position: absolute; background: rgba(255,255,255,0.75);
+    content: ''; position: absolute; background: rgba(255,255,255,0.8);
   }
   #crosshair::before { width: 2px; height: 20px; left: 9px; top: 0; }
-  #crosshair::after  { width: 20px; height: 2px; left: 0; top: 9px; }
-
-  #controls-hint {
-    position: absolute; bottom: 20px; left: 50%;
-    transform: translateX(-50%);
-    color: rgba(255,255,255,0.5);
-    font: 11px/1.8 'Courier New', monospace;
-    text-align: center;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-  }
-  #controls-hint span {
-    display: inline-block;
-    border: 1px solid rgba(255,255,255,0.3);
-    padding: 1px 6px; border-radius: 3px;
-    margin: 0 2px;
-  }
-
-  #model-status {
-    position: absolute; bottom: 20px; right: 20px;
-    color: rgba(255,255,255,0.6);
-    font: 10px/2 'Courier New', monospace;
-    text-align: right;
-    letter-spacing: 1px;
-  }
-  .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
-  .dot.wait { background: #555; }
-  .dot.ok   { background: #4caf50; box-shadow: 0 0 6px #4caf50; }
-  .dot.fail { background: #ff5252; box-shadow: 0 0 6px #ff5252; }
-  .dot.sub  { background: #ffb300; box-shadow: 0 0 6px #ffb300; }
-
-  /* ── Overlays ── */
-  #loading {
+  #crosshair::after  { width: 20px; height: 2px; top: 9px; left: 0; }
+  #overlay {
     position: fixed; inset: 0;
-    background: #000;
+    background: rgba(0,0,0,0.75);
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
-    z-index: 50;
-    color: #fff;
-    font: 12px/1 'Courier New', monospace;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    gap: 18px;
+    color: #fff; font: 14px/2 monospace;
+    cursor: pointer; z-index: 20;
+    letter-spacing: 2px; text-transform: uppercase;
   }
-  #loading-title { font-size: 20px; letter-spacing: 8px; opacity: 0.9; }
-  #bar-wrap { width: 200px; height: 2px; background: rgba(255,255,255,0.1); }
-  #bar       { height: 100%; background: #fff; width: 0; transition: width 0.3s ease; }
-  #load-msg  { font-size: 10px; color: #555; min-height: 14px; }
-
-  #start-screen {
-    position: fixed; inset: 0;
-    display: none;
-    flex-direction: column;
-    align-items: center; justify-content: center;
-    background: rgba(0,0,0,0.85);
-    z-index: 40;
-    cursor: pointer;
-    color: #fff;
-    font-family: 'Courier New', monospace;
-    text-align: center;
-    gap: 14px;
-  }
-  #start-screen h1 {
-    font-size: clamp(22px, 4vw, 40px);
-    letter-spacing: 10px;
-    text-transform: uppercase;
-    font-weight: 400;
-  }
-  #start-screen p { font-size: 11px; color: #666; letter-spacing: 3px; text-transform: uppercase; }
-  #start-screen .enter-hint {
-    font-size: 10px; color: #444; margin-top: 6px; letter-spacing: 2px;
+  #overlay h1 { font-size: 24px; margin-bottom: 8px; }
+  #overlay p  { font-size: 11px; color: #888; }
+  #hint {
+    position: fixed; bottom: 16px; left: 50%;
+    transform: translateX(-50%);
+    color: rgba(255,255,255,0.4);
+    font: 11px monospace; letter-spacing: 2px;
+    pointer-events: none; z-index: 10;
   }
 </style>
 </head>
 <body>
-
-<div id="loading">
-  <div id="loading-title">BFA Show</div>
-  <div id="bar-wrap"><div id="bar"></div></div>
-  <div id="load-msg">Initializing…</div>
+<div id="crosshair"></div>
+<div id="overlay">
+  <h1>Spiral World</h1>
+  <p>Click to enter — ESC to release</p>
 </div>
-
-<div id="start-screen">
-  <h1>BFA Show</h1>
-  <p>Virtual World</p>
-  <div class="enter-hint">Click anywhere to enter — ESC to release mouse</div>
-</div>
-
-<div id="hud">
-  <div id="crosshair"></div>
-  <div id="controls-hint">
-    <span>W</span><span>A</span><span>S</span><span>D</span> Move &nbsp;&nbsp;
-    <span>Mouse</span> Look &nbsp;&nbsp;
-    <span>Shift</span> Sprint
-  </div>
-  <div id="model-status">
-    <div><span class="dot wait" id="d-ico"></span>ico_tree.glb</div>
-    <div><span class="dot wait" id="d-oak"></span>oak.glb <small style="color:#444">(fallback)</small></div>
-    <div><span class="dot wait" id="d-pine"></span>pine.glb <small style="color:#444">(fallback)</small></div>
-    <div style="margin-top:6px">
-      <span class="dot wait" id="d-crt"></span>old_crt_grey.glb
-    </div>
-    <div><span class="dot wait" id="d-oled-b"></span>oled_black.glb</div>
-    <div><span class="dot wait" id="d-plastic"></span>plastic_crt.glb</div>
-  </div>
-</div>
+<div id="hint">WASD · MOUSE LOOK · SHIFT SPRINT</div>
 
 <script type="importmap">
-{
-  "imports": {
-    "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.module.js"
-  }
-}
+{ "imports": { "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.module.js" } }
 </script>
 <script type="module">
 import * as THREE from 'three';
+const { PointerLockControls } = await import('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/jsm/controls/PointerLockControls.js');
+const { GLTFLoader } = await import('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/jsm/loaders/GLTFLoader.js');
 
-const JSPM = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/jsm';
-const { GLTFLoader }         = await import(`${JSPM}/loaders/GLTFLoader.js`);
-const { PointerLockControls} = await import(`${JSPM}/controls/PointerLockControls.js`);
-
-// ═══════════════════════════════════════════════════
-// RENDERER
-// ═══════════════════════════════════════════════════
+// ── Renderer ──────────────────────────────────────────────────────────────────
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputEncoding = THREE.sRGBEncoding;
 document.body.appendChild(renderer.domElement);
 
-// ═══════════════════════════════════════════════════
-// SCENE
-// ═══════════════════════════════════════════════════
-const scene  = new THREE.Scene();
-scene.background = new THREE.Color(0x8fbcd4);
-scene.fog = new THREE.FogExp2(0x8fbcd4, 0.018);
+// ── Scene ─────────────────────────────────────────────────────────────────────
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x87ceeb);
+scene.fog = new THREE.FogExp2(0x87ceeb, 0.008);
 
-const camera = new THREE.PerspectiveCamera(72, innerWidth / innerHeight, 0.1, 200);
-camera.position.set(0, 1.7, 0);
+// ── Camera ────────────────────────────────────────────────────────────────────
+const camera = new THREE.PerspectiveCamera(72, innerWidth / innerHeight, 0.1, 400);
 
-// ── Lighting ──────────────────────────────────────
-const ambient = new THREE.AmbientLight(0xfff8f0, 0.7);
-scene.add(ambient);
-
-const sun = new THREE.DirectionalLight(0xfff4d0, 1.3);
-sun.position.set(50, 80, 30);
+// ── Lights ────────────────────────────────────────────────────────────────────
+scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+const sun = new THREE.DirectionalLight(0xfff4d0, 1.2);
+sun.position.set(40, 80, 20);
 sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048);
-sun.shadow.camera.near = 1; sun.shadow.camera.far = 250;
-sun.shadow.camera.left = -100; sun.shadow.camera.right = 100;
-sun.shadow.camera.top  =  100; sun.shadow.camera.bottom = -100;
+sun.shadow.camera.near = 1; sun.shadow.camera.far = 400;
+sun.shadow.camera.left = -200; sun.shadow.camera.right = 200;
+sun.shadow.camera.top  =  200; sun.shadow.camera.bottom = -200;
 scene.add(sun);
+scene.add(new THREE.HemisphereLight(0x87ceeb, 0x3d6b30, 0.4));
 
-scene.add(new THREE.HemisphereLight(0x87ceeb, 0x3d6b30, 0.5));
-
-// ── Ground ────────────────────────────────────────
+// ── Ground ────────────────────────────────────────────────────────────────────
 const ground = new THREE.Mesh(
-  new THREE.PlaneGeometry(400, 400),
+  new THREE.PlaneGeometry(800, 800),
   new THREE.MeshLambertMaterial({ color: 0x4a7c3f })
 );
 ground.rotation.x = -Math.PI / 2;
 ground.receiveShadow = true;
 scene.add(ground);
 
-// ═══════════════════════════════════════════════════
-// SPIRAL MATH
-// Archimedean spiral: r = a + b*θ
-// ═══════════════════════════════════════════════════
-const SPIRAL_A       = 4;     // inner radius start
-const SPIRAL_B       = 3.8;   // gap between arms
-const PATH_WIDTH     = 5;     // walkable corridor width
-const WALL_HEIGHT    = 2.8;   // hedge/barrier height
-const TURNS          = 3.2;   // how many full rotations
-const POINTS_PER_TURN = 80;
-const TOTAL_POINTS   = Math.floor(TURNS * POINTS_PER_TURN);
+// ══════════════════════════════════════════════════
+// ★ TWEAK THESE
+const SPIRAL_A = 6;    // starting radius
+const SPIRAL_B = 8;    // spacing between arms
+const TURNS    = 2.2;  // number of rotations
+const SAMPLES  = 1200; // smoothness (higher = smoother, don't go below 800)
+// ══════════════════════════════════════════════════
 
-// Generate centerline points
-function spiralPoint(t) {
-  const angle = t * Math.PI * 2;
-  const r = SPIRAL_A + SPIRAL_B * t;
-  return new THREE.Vector2(Math.cos(angle) * r, Math.sin(angle) * r);
-}
-
+// ── Build centerline points using correct Archimedean formula ─────────────────
+// r = SPIRAL_A + SPIRAL_B * (angle / (2*PI))
+// This gives even spacing between arms regardless of turns
 const centerline = [];
-for (let i = 0; i <= TOTAL_POINTS; i++) {
-  const t = (i / POINTS_PER_TURN) * TURNS / TURNS + i / TOTAL_POINTS * TURNS;
-  const angle = (i / TOTAL_POINTS) * TURNS * Math.PI * 2;
-  const r     = SPIRAL_A + SPIRAL_B * (i / TOTAL_POINTS) * TURNS;
-  centerline.push(new THREE.Vector3(Math.cos(angle) * r, 0, Math.sin(angle) * r));
-}
-
-// ─── Build walls (hedges) along both edges of spiral ─
-const wallMat = new THREE.MeshLambertMaterial({ color: 0x2d5a1b });
-
-function buildWallsAlongSpiral() {
-  const half = PATH_WIDTH / 2;
-
-  for (let i = 0; i < centerline.length - 1; i++) {
-    const curr = centerline[i];
-    const next = centerline[i + 1];
-
-    // tangent direction
-    const tang = new THREE.Vector3().subVectors(next, curr).normalize();
-    // right-perpendicular (XZ plane)
-    const perp = new THREE.Vector3(-tang.z, 0, tang.x);
-
-    const segLen = curr.distanceTo(next);
-    const wallGeo = new THREE.BoxGeometry(segLen + 0.05, WALL_HEIGHT, 1.0);
-
-    for (const side of [-1, 1]) {
-      const midPt = new THREE.Vector3().addVectors(curr, next).multiplyScalar(0.5);
-      const offset = perp.clone().multiplyScalar(side * half);
-
-      const wall = new THREE.Mesh(wallGeo, wallMat);
-      wall.position.set(
-        midPt.x + offset.x,
-        WALL_HEIGHT / 2,
-        midPt.z + offset.z
-      );
-      // align wall segment to tangent
-      wall.rotation.y = Math.atan2(tang.x, tang.z);
-      wall.castShadow = true;
-      wall.receiveShadow = true;
-      scene.add(wall);
-    }
-  }
-}
-
-buildWallsAlongSpiral();
-
-// ─── Ground path tint (slightly lighter) ──────────
-{
-  const pathCurve = new THREE.CatmullRomCurve3(centerline);
-  // small rectangular path tiles along centerline
-  const tileMat = new THREE.MeshLambertMaterial({ color: 0x6b8f5a });
-  const tileGeo = new THREE.PlaneGeometry(2.5, PATH_WIDTH);
-  for (let i = 0; i < centerline.length - 1; i += 3) {
-    const curr = centerline[i];
-    const next = centerline[Math.min(i + 3, centerline.length - 1)];
-    const tang = new THREE.Vector3().subVectors(next, curr).normalize();
-    const mid  = new THREE.Vector3().addVectors(curr, next).multiplyScalar(0.5);
-    const tile = new THREE.Mesh(tileGeo, tileMat);
-    tile.rotation.x = -Math.PI / 2;
-    tile.rotation.z = -Math.atan2(tang.x, tang.z);
-    tile.position.set(mid.x, 0.01, mid.z);
-    tile.receiveShadow = true;
-    scene.add(tile);
-  }
-}
-
-// ═══════════════════════════════════════════════════
-// SPAWN POINTS ALONG SPIRAL
-// ═══════════════════════════════════════════════════
-// Pre-compute positions + rotations facing inward along path
-function getSpiralPose(indexFraction) {
-  const i   = Math.floor(indexFraction * (centerline.length - 2));
-  const curr = centerline[i];
-  const next = centerline[i + 1];
-  const tang = new THREE.Vector3().subVectors(next, curr).normalize();
-  const angle = Math.atan2(tang.x, tang.z);
-  return { pos: curr.clone(), angle };
-}
-
-// ═══════════════════════════════════════════════════
-// FALLBACK GEOMETRY
-// ═══════════════════════════════════════════════════
-function makeFallbackTree(height, trunkHex, leafHex) {
-  const g = new THREE.Group();
-  const trunk = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.18, 0.28, height * 0.35, 7),
-    new THREE.MeshLambertMaterial({ color: trunkHex })
-  );
-  trunk.position.y = height * 0.175;
-  trunk.castShadow = true;
-  g.add(trunk);
-  const canopy = new THREE.Mesh(
-    new THREE.SphereGeometry(height * 0.30, 8, 6),
-    new THREE.MeshLambertMaterial({ color: leafHex })
-  );
-  canopy.position.y = height * 0.58;
-  canopy.castShadow = true;
-  g.add(canopy);
-  return g;
-}
-
-function makeFallbackPine(height) {
-  const g = new THREE.Group();
-  g.add(Object.assign(
-    new THREE.Mesh(
-      new THREE.CylinderGeometry(0.12, 0.22, height * 0.28, 7),
-      new THREE.MeshLambertMaterial({ color: 0x4a2c0a })
-    ),
-    { position: new THREE.Vector3(0, height * 0.14, 0), castShadow: true }
-  ));
-  for (let t = 0; t < 3; t++) {
-    const cone = new THREE.Mesh(
-      new THREE.ConeGeometry(height * 0.20 * (1 - t * 0.22), height * 0.38, 8),
-      new THREE.MeshLambertMaterial({ color: 0x1e4d2b })
-    );
-    cone.position.y = height * 0.34 + t * height * 0.20;
-    cone.castShadow = true;
-    g.add(cone);
-  }
-  return g;
-}
-
-function makeFallbackTV() {
-  const g = new THREE.Group();
-  const body = new THREE.Mesh(
-    new THREE.BoxGeometry(1.55, 0.95, 0.14),
-    new THREE.MeshLambertMaterial({ color: 0x111111 })
-  );
-  body.position.y = 1.15; body.castShadow = true;
-  g.add(body);
-  const screen = new THREE.Mesh(
-    new THREE.PlaneGeometry(1.38, 0.80),
-    new THREE.MeshBasicMaterial({ color: 0x0022cc })
-  );
-  screen.name = 'Screen';
-  screen.position.set(0, 1.15, 0.082);
-  g.add(screen);
-  const stand = new THREE.Mesh(
-    new THREE.BoxGeometry(0.10, 0.45, 0.10),
-    new THREE.MeshLambertMaterial({ color: 0x2a2a2a })
-  );
-  stand.position.y = 0.225; g.add(stand);
-  const base = new THREE.Mesh(
-    new THREE.BoxGeometry(0.48, 0.05, 0.28),
-    new THREE.MeshLambertMaterial({ color: 0x2a2a2a })
-  );
-  base.position.y = 0.025; g.add(base);
-  return g;
-}
-
-// ═══════════════════════════════════════════════════
-// LOADING HELPERS
-// ═══════════════════════════════════════════════════
-const loader = new GLTFLoader();
-
-function setDot(id, state) {
-  const el = document.getElementById(id);
-  if (el) el.className = 'dot ' + state;
-}
-function setProgress(pct, msg) {
-  document.getElementById('bar').style.width = pct + '%';
-  document.getElementById('load-msg').textContent = msg;
-}
-
-function loadModel(path, dotId) {
-  return new Promise(resolve => {
-    loader.load(path,
-      gltf => { setDot(dotId, 'ok'); resolve(gltf.scene); },
-      undefined,
-      ()   => { setDot(dotId, 'fail'); resolve(null); }
-    );
-  });
-}
-
-// Place object at spiral position facing along path
-function placeAlongSpiral(obj, fraction, side = 0) {
-  const { pos, angle } = getSpiralPose(fraction);
-  // side: +1 right wall, -1 left wall, 0 center
-  const perp = new THREE.Vector3(Math.cos(angle), 0, -Math.sin(angle));
-  obj.position.set(
-    pos.x + perp.x * side,
+for (let i = 0; i <= SAMPLES; i++) {
+  const t     = i / SAMPLES;
+  const angle = t * TURNS * Math.PI * 2;        // total angle swept
+  const r     = SPIRAL_A + SPIRAL_B * (angle / (Math.PI * 2)); // r grows per full rotation
+  centerline.push(new THREE.Vector3(
+    Math.cos(angle) * r,
     0,
-    pos.z + perp.z * side
+    Math.sin(angle) * r
+  ));
+}
+
+
+
+// ── Load models ───────────────────────────────────
+const loader = new GLTFLoader();
+const treeModels = { pine: [], dead: [], ico: [] };
+let modelsLoaded = 0;
+const totalModels = 13; // 4 pine + 6 dead + 3 ico
+
+// Load pine tree variants
+for (let i = 1; i <= 4; i++) {
+  loader.load(
+    `../assets/trees/pine_tree${i === 1 ? '' : i}.glb`,
+    (gltf) => {
+      treeModels.pine.push(gltf.scene);
+      modelsLoaded++;
+    },
+    undefined,
+    (error) => console.error('Tree loading error:', error)
   );
-  // face inward / along path
-  obj.rotation.y = angle + (side > 0 ? Math.PI : 0);
-  obj.traverse(c => { if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; } });
-  scene.add(obj);
 }
 
-// ═══════════════════════════════════════════════════
-// MAIN
-// ═══════════════════════════════════════════════════
-async function main() {
-  setProgress(15, 'Loading tree models…');
+// Load dead tree variants
+for (let i = 1; i <= 6; i++) {
+  loader.load(
+    `../assets/trees/dead_tree${i === 1 ? '' : i}.glb`,
+    (gltf) => {
+      treeModels.dead.push(gltf.scene);
+      modelsLoaded++;
+    },
+    undefined,
+    (error) => console.error('Tree loading error:', error)
+  );
+}
 
-  // ── Trees (paths relative to bfa_show folder) ──
-  const icoScene  = await loadModel('../assets/trees/ico_tree.glb', 'd-ico');
-  const oakProto  = icoScene
-    ? icoScene.clone(true)
-    : (() => { setDot('d-ico', 'ok'); return makeFallbackTree(16, 0x5c3a1e, 0x2d6a2d); })();
+// Load ico tree variants
+for (let i = 1; i <= 3; i++) {
+  loader.load(
+    `../assets/trees/ico_tree${i === 1 ? '' : i}.glb`,
+    (gltf) => {
+      treeModels.ico.push(gltf.scene);
+      modelsLoaded++;
+    },
+    undefined,
+    (error) => console.error('Tree loading error:', error)
+  );
+}
 
-  // oak.glb and pine.glb don't exist yet — use fallbacks, mark yellow
-  setDot('d-oak',  'sub');
-  setDot('d-pine', 'sub');
-  const oakFallback  = makeFallbackTree(16, 0x5c3a1e, 0x2d6a2d);
-  const pineFallback = makeFallbackPine(20);
-
-  setProgress(45, 'Loading TV models…');
-
-  const tvModels = [
-    { path: '../assets/tv_models/old_crt_grey.glb', dot: 'd-crt'     },
-    { path: '../assets/tv_models/oled_black.glb',   dot: 'd-oled-b'  },
-    { path: '../assets/tv_models/plastic_crt.glb',  dot: 'd-plastic' },
-  ];
-
-  const tvProtos = [];
-  for (const m of tvModels) {
-    setProgress(45 + tvProtos.length * 12, `Loading ${m.path.split('/').pop()}…`);
-    const s = await loadModel(m.path, m.dot);
-    tvProtos.push(s || makeFallbackTV());
-  }
-
-  setProgress(90, 'Populating spiral…');
-
-  // ── Place trees along walls every ~1/15 of spiral ──
-  const treeProtos = [oakProto, oakFallback, pineFallback];
-  const treeCount  = 15;
-  for (let i = 0; i < treeCount; i++) {
-    const frac  = (i + 0.5) / treeCount;
-    const proto = treeProtos[i % treeProtos.length];
-    const side  = (i % 2 === 0) ? 1.8 : -1.8;  // alternate sides of path
-    const tree  = proto.clone(true);
-    const scale = 0.9 + Math.random() * 0.25;
-    tree.scale.setScalar(scale);
-    placeAlongSpiral(tree, frac, side);
-  }
-
-  // ── Place TVs along inner wall every ~1/6 of spiral ──
-  const tvCount = 6;
-  for (let i = 0; i < tvCount; i++) {
-    const frac  = (i + 0.5) / tvCount;
-    const proto = tvProtos[i % tvProtos.length];
-    const tv    = proto.clone(true);
-    placeAlongSpiral(tv, frac, -1.5); // inner/left wall side
-  }
-
-  // ── Entry gap marker (open start of spiral) ──
-  // small post markers at entrance
-  for (let side of [-1, 1]) {
-    const post = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.08, 0.08, WALL_HEIGHT, 6),
-      new THREE.MeshLambertMaterial({ color: 0xd4af37 })
-    );
-    post.position.set(side * (PATH_WIDTH / 2), WALL_HEIGHT / 2, SPIRAL_A - 1);
-    post.castShadow = true;
-    scene.add(post);
-  }
-
-  setProgress(100, 'Ready');
-
-  // ═══════════════════════════════════════════════
-  // CONTROLS
-  // ═══════════════════════════════════════════════
-  const controls = new PointerLockControls(camera, document.body);
-
-  // Spawn player at entrance of spiral — set on camera directly before adding to scene
-  const entrance = centerline[0];
-  camera.position.set(entrance.x, 1.7, entrance.z + 2);
-  scene.add(controls.getObject());
-
-  const startScreen = document.getElementById('start-screen');
-  startScreen.addEventListener('click', () => controls.lock());
-  controls.addEventListener('lock',   () => { startScreen.style.display = 'none'; });
-  controls.addEventListener('unlock', () => { startScreen.style.display = 'flex'; });
-
-  const keys = {};
-  addEventListener('keydown', e => keys[e.code] = true);
-  addEventListener('keyup',   e => keys[e.code] = false);
-
-  let prevTime = performance.now();
-  const velocity  = new THREE.Vector3();
-  const direction = new THREE.Vector3();
-
-  // ═══════════════════════════════════════════════
-  // RENDER LOOP
-  // ═══════════════════════════════════════════════
-  setTimeout(() => {
-    document.getElementById('loading').style.display = 'none';
-    startScreen.style.display = 'flex';
-  }, 350);
-
-  function animate() {
-    requestAnimationFrame(animate);
-
-    if (controls.isLocked) {
-      const now   = performance.now();
-      const delta = Math.min((now - prevTime) / 1000, 0.1);
-      prevTime = now;
-
-      const sprint = keys['ShiftLeft'] || keys['ShiftRight'];
-      const speed  = sprint ? 9 : 4.5;
-
-      direction.set(0, 0, 0);
-      if (keys['KeyW'] || keys['ArrowUp'])    direction.z -= 1;
-      if (keys['KeyS'] || keys['ArrowDown'])  direction.z += 1;
-      if (keys['KeyA'] || keys['ArrowLeft'])  direction.x -= 1;
-      if (keys['KeyD'] || keys['ArrowRight']) direction.x += 1;
-      direction.normalize();
-
-      controls.moveRight(direction.x * speed * delta);
-      controls.moveForward(-direction.z * speed * delta);
-      camera.position.y = 1.7;
-    } else {
-      prevTime = performance.now();
+// ── Place tree clusters ──────────────
+function placeModels() {
+  // Place tree clusters at regular intervals along the spiral
+  const clusterSpacing = SAMPLES / 3; // 3 clusters (more separation)
+  const treeTypes = ['pine', 'dead', 'ico'];
+  
+  for (let c = 0; c < 3; c++) {
+    const pointIdx = Math.floor(c * clusterSpacing);
+    if (pointIdx >= centerline.length) break;
+    
+    const clusterCenter = centerline[pointIdx];
+    const treeType = treeTypes[c % 3]; // Cycle through tree types
+    const treeArray = treeModels[treeType];
+    
+    // Place 4-5 trees around each cluster point
+    for (let t = 0; t < 5; t++) {
+      if (!treeArray || treeArray.length === 0) continue;
+      
+      const treeVariant = treeArray[Math.floor(Math.random() * treeArray.length)];
+      const tree = treeVariant.clone();
+      const distance = 8 + Math.random() * 8; // 8-16 units from cluster center
+      const angle = (t / 5) * Math.PI * 2 + Math.random() * 0.5;
+      
+      tree.position.set(
+        clusterCenter.x + Math.cos(angle) * distance,
+        0,
+        clusterCenter.z + Math.sin(angle) * distance
+      );
+      
+      tree.traverse((child) => {
+        if (child.isMesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+        }
+      });
+      
+      scene.add(tree);
     }
-
-    renderer.render(scene, camera);
   }
-  animate();
 }
 
-main().catch(err => {
-  console.error(err);
-  document.getElementById('load-msg').textContent = 'Error: ' + err.message;
-});
+// Wait for models to load before placing them
+const modelCheckInterval = setInterval(() => {
+  if (modelsLoaded === totalModels) {
+    clearInterval(modelCheckInterval);
+    placeModels();
+  }
+}, 100);
 
-addEventListener('resize', () => {
+// ── Controls ──────────────────────────────────────
+const controls = new PointerLockControls(camera, renderer.domElement);
+scene.add(controls.getObject());
+
+// Spawn at entrance facing into spiral
+camera.position.set(centerline[0].x, 1.7, centerline[0].z + 4);
+const lookTarget = centerline[10];
+camera.lookAt(lookTarget.x, 1.7, lookTarget.z);
+
+const overlay = document.getElementById('overlay');
+overlay.addEventListener('click', () => controls.lock());
+controls.addEventListener('lock',   () => overlay.style.display = 'none');
+controls.addEventListener('unlock', () => overlay.style.display = 'flex');
+
+const keys = {};
+document.addEventListener('keydown', e => { keys[e.code] = true;  e.preventDefault(); });
+document.addEventListener('keyup',   e => { keys[e.code] = false; });
+
+// ── Animate ───────────────────────────────────────
+let prev = performance.now();
+function animate() {
+  requestAnimationFrame(animate);
+  if (controls.isLocked) {
+    const now   = performance.now();
+    const delta = Math.min((now - prev) / 1000, 0.1);
+    prev = now;
+    const speed = (keys['ShiftLeft'] || keys['ShiftRight']) ? 10 : 5;
+    const dir   = new THREE.Vector3();
+    if (keys['KeyW'] || keys['ArrowUp'])    dir.z -= 1;
+    if (keys['KeyS'] || keys['ArrowDown'])  dir.z += 1;
+    if (keys['KeyA'] || keys['ArrowLeft'])  dir.x -= 1;
+    if (keys['KeyD'] || keys['ArrowRight']) dir.x += 1;
+    dir.normalize();
+    controls.moveForward(-dir.z * speed * delta);
+    controls.moveRight(dir.x * speed * delta);
+    camera.position.y = 5.7;
+  } else {
+    prev = performance.now();
+  }
+  renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
   camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight);

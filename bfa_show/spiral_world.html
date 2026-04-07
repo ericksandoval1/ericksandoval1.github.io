@@ -1,237 +1,147 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Spiral World</title>
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { overflow: hidden; background: #000; }
-  #crosshair {
-    position: fixed; top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    pointer-events: none; z-index: 10;
-  }
-  #crosshair::before, #crosshair::after {
-    content: ''; position: absolute; background: rgba(255,255,255,0.8);
-  }
-  #crosshair::before { width: 2px; height: 20px; left: 9px; top: 0; }
-  #crosshair::after  { width: 20px; height: 2px; top: 9px; left: 0; }
-  #overlay {
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.75);
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    color: #fff; font: 14px/2 monospace;
-    cursor: pointer; z-index: 20;
-    letter-spacing: 2px; text-transform: uppercase;
-  }
-  #overlay h1 { font-size: 24px; margin-bottom: 8px; }
-  #overlay p  { font-size: 11px; color: #888; }
-  #hint {
-    position: fixed; bottom: 16px; left: 50%;
-    transform: translateX(-50%);
-    color: rgba(255,255,255,0.4);
-    font: 11px monospace; letter-spacing: 2px;
-    pointer-events: none; z-index: 10;
-  }
-</style>
+  <meta charset="UTF-8">
+  <title>Three.js World</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #000; overflow: hidden; }
+    canvas { display: block; }
+  </style>
 </head>
 <body>
-<div id="crosshair"></div>
-<div id="overlay">
-  <h1>Spiral World</h1>
-  <p>Click to enter — ESC to release</p>
-</div>
-<div id="hint">WASD · MOUSE LOOK · SHIFT SPRINT</div>
 
 <script type="importmap">
-{ "imports": { "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.module.js" } }
+{
+  "imports": {
+    "three":          "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/":  "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
 </script>
-<script type="module">
-import * as THREE from 'three';
-const { PointerLockControls } = await import('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/jsm/controls/PointerLockControls.js');
 
-// ── Renderer ──────────────────────────────────────────────────────────────────
+<script type="module">
+import * as THREE              from 'three';
+import { GLTFLoader }          from 'three/addons/loaders/GLTFLoader.js';
+import { OrbitControls }       from 'three/addons/controls/OrbitControls.js';
+
+// ─── Renderer ────────────────────────────────────────────────────────────────
 const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-renderer.setSize(innerWidth, innerHeight);
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
 renderer.shadowMap.enabled = true;
-renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
 document.body.appendChild(renderer.domElement);
 
-// ── Scene ─────────────────────────────────────────────────────────────────────
+// ─── Scene ───────────────────────────────────────────────────────────────────
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x87ceeb);
-scene.fog = new THREE.FogExp2(0x87ceeb, 0.008);
+scene.background = new THREE.Color(0x111111);
+scene.fog = new THREE.Fog(0x111111, 20, 80);
 
-// ── Camera ────────────────────────────────────────────────────────────────────
-const camera = new THREE.PerspectiveCamera(72, innerWidth / innerHeight, 0.1, 400);
+// ─── Camera ──────────────────────────────────────────────────────────────────
+const camera = new THREE.PerspectiveCamera(
+  75,                                  // field of view
+  window.innerWidth / window.innerHeight,
+  0.1,                                 // near clip
+  1000                                 // far clip
+);
+camera.position.set(0, 2, 10);
 
-// ── Lights ────────────────────────────────────────────────────────────────────
-scene.add(new THREE.AmbientLight(0xffffff, 0.7));
-const sun = new THREE.DirectionalLight(0xfff4d0, 1.2);
-sun.position.set(40, 80, 20);
+// ─── Controls ────────────────────────────────────────────────────────────────
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.target.set(0, 1, 0);
+
+// ─── Lights ──────────────────────────────────────────────────────────────────
+const ambient = new THREE.AmbientLight(0xffffff, 0.4);
+scene.add(ambient);
+
+const sun = new THREE.DirectionalLight(0xffeedd, 1.2);
+sun.position.set(10, 20, 10);
 sun.castShadow = true;
-sun.shadow.mapSize.set(2048, 2048);
-sun.shadow.camera.near = 1; sun.shadow.camera.far = 400;
-sun.shadow.camera.left = -200; sun.shadow.camera.right = 200;
-sun.shadow.camera.top  =  200; sun.shadow.camera.bottom = -200;
 scene.add(sun);
-scene.add(new THREE.HemisphereLight(0x87ceeb, 0x3d6b30, 0.4));
 
-// ── Ground ────────────────────────────────────────────────────────────────────
+// ─── Ground ──────────────────────────────────────────────────────────────────
 const ground = new THREE.Mesh(
-  new THREE.PlaneGeometry(800, 800),
-  new THREE.MeshLambertMaterial({ color: 0x4a7c3f })
+  new THREE.PlaneGeometry(100, 100),
+  new THREE.MeshStandardMaterial({ color: 0x222222 })
 );
 ground.rotation.x = -Math.PI / 2;
 ground.receiveShadow = true;
 scene.add(ground);
 
-// ══════════════════════════════════════════════════
-// ★ TWEAK THESE
-const SPIRAL_A = 6;    // starting radius
-const SPIRAL_B = 8;    // spacing between arms
-const TURNS    = 2.2;  // number of rotations
-const PATH_W   = 20;   // corridor width
-const WALL_H   = 3.5;  // wall height
-const SAMPLES  = 1200; // smoothness (higher = smoother, don't go below 800)
-// ══════════════════════════════════════════════════
+// ─── Load GLB models ─────────────────────────────────────────────────────────
+const loader = new GLTFLoader();
 
-// ── Build centerline points using correct Archimedean formula ─────────────────
-// r = SPIRAL_A + SPIRAL_B * (angle / (2*PI))
-// This gives even spacing between arms regardless of turns
-const centerline = [];
-for (let i = 0; i <= SAMPLES; i++) {
-  const t     = i / SAMPLES;
-  const angle = t * TURNS * Math.PI * 2;        // total angle swept
-  const r     = SPIRAL_A + SPIRAL_B * (angle / (Math.PI * 2)); // r grows per full rotation
-  centerline.push(new THREE.Vector3(
-    Math.cos(angle) * r,
-    0,
-    Math.sin(angle) * r
-  ));
-}
-
-// ── Build walls as two continuous TubeCurves (inner + outer edge) ─────────────
-// This gives perfectly smooth walls with zero gaps or distortion
-
-class SpiralEdgeCurve extends THREE.Curve {
-  constructor(offset) {
-    super();
-    this.offset = offset; // +PATH_W/2 or -PATH_W/2
-  }
-  getPoint(t) {
-    const angle = t * TURNS * Math.PI * 2;
-    const r     = SPIRAL_A + SPIRAL_B * (angle / (Math.PI * 2));
-    // perpendicular offset from centerline
-    const dr    = r + this.offset;
-    return new THREE.Vector3(
-      Math.cos(angle) * dr,
-      0,
-      Math.sin(angle) * dr
-    );
-  }
-}
-
-const wallMat = new THREE.MeshLambertMaterial({ color: 0x2d5a1b, side: THREE.DoubleSide });
-
-for (const side of [-1, 1]) {
-  const curve = new SpiralEdgeCurve(side * PATH_W / 2);
-  const tube  = new THREE.TubeGeometry(curve, SAMPLES, 0.6, 6, false);
-  const wall  = new THREE.Mesh(tube, wallMat);
-  // lift so bottom sits on ground, top at WALL_H
-  wall.position.y = WALL_H / 2;
-  wall.castShadow = true;
-  wall.receiveShadow = true;
-  scene.add(wall);
-
-  // flat top cap to make walls look solid from above
-  const capMat = new THREE.MeshLambertMaterial({ color: 0x244d14 });
-  const capCurve = new SpiralEdgeCurve(side * PATH_W / 2);
-  const cap = new THREE.Mesh(
-    new THREE.TubeGeometry(capCurve, SAMPLES, 0.62, 6, false),
-    capMat
+function loadModel(path, { x = 0, y = 0, z = 0, scale = 1, rotY = 0 } = {}) {
+  loader.load(
+    path,
+    (gltf) => {
+      const model = gltf.scene;
+      model.position.set(x, y, z);
+      model.scale.setScalar(scale);
+      model.rotation.y = rotY;
+      model.traverse(child => {
+        if (child.isMesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+        }
+      });
+      scene.add(model);
+    },
+    undefined,
+    (err) => console.error('Failed to load', path, err)
   );
-  cap.position.y = WALL_H;
-  scene.add(cap);
 }
 
-// ── Path fill (ground tint inside corridor) ───────────────────────────────────
-const pathMat = new THREE.MeshLambertMaterial({ color: 0x527044 });
-for (let i = 0; i < centerline.length - 1; i += 2) {
-  const curr   = centerline[i], next = centerline[i + 2] || centerline[i + 1];
-  const tang   = new THREE.Vector3().subVectors(next, curr).normalize();
-  const segLen = curr.distanceTo(next) * 1.05;
-  const mid    = new THREE.Vector3().addVectors(curr, next).multiplyScalar(0.5);
-  const rotY   = Math.atan2(tang.x, tang.z);
-  const tile   = new THREE.Mesh(new THREE.PlaneGeometry(segLen, PATH_W - 1.5), pathMat);
-  tile.rotation.x = -Math.PI / 2;
-  tile.rotation.z = -rotY;
-  tile.position.set(mid.x, 0.02, mid.z);
-  tile.receiveShadow = true;
-  scene.add(tile);
-}
+// ─── Trees (z = 0) ───────────────────────────────────────────────────────────
+loadModel('assets/trees/pine_tree.glb',         { x: -33, y: 0, z: 0, scale: 1 });
+loadModel('assets/trees/pine_tree2.glb',        { x: -30, y: 0, z: 0, scale: 1 });
+loadModel('assets/trees/pine_tree3.glb',        { x: -27, y: 0, z: 0, scale: 1 });
+loadModel('assets/trees/pine_tree4.glb',        { x: -24, y: 0, z: 0, scale: 1 });
+loadModel('assets/trees/pine_tree_yellow.glb',  { x: -21, y: 0, z: 0, scale: 1 });
+loadModel('assets/trees/pine_tree_yellow2.glb', { x: -18, y: 0, z: 0, scale: 1 });
+loadModel('assets/trees/pine_tree_yellow3.glb', { x: -15, y: 0, z: 0, scale: 1 });
+loadModel('assets/trees/pine_tree_yellow4.glb', { x: -12, y: 0, z: 0, scale: 1 });
+loadModel('assets/trees/ico_tree.glb',          { x:  -9, y: 0, z: 0, scale: 1 });
+loadModel('assets/trees/ico_tree2.glb',         { x:  -6, y: 0, z: 0, scale: 1 });
+loadModel('assets/trees/ico_tree3.glb',         { x:  -3, y: 0, z: 0, scale: 1 });
+loadModel('assets/trees/ico_tree_yellow.glb',   { x:   0, y: 0, z: 0, scale: 1 });
+loadModel('assets/trees/ico_tree_yellow2.glb',  { x:   3, y: 0, z: 0, scale: 1 });
+loadModel('assets/trees/ico_tree_yellow3.glb',  { x:   6, y: 0, z: 0, scale: 1 });
+loadModel('assets/trees/ico_tree_orange.glb',   { x:   9, y: 0, z: 0, scale: 1 });
+loadModel('assets/trees/ico_tree_orange2.glb',  { x:  12, y: 0, z: 0, scale: 1 });
+loadModel('assets/trees/ico_tree_orange3.glb',  { x:  15, y: 0, z: 0, scale: 1 });
+loadModel('assets/trees/dead_tree.glb',         { x:  18, y: 0, z: 0, scale: 1 });
+loadModel('assets/trees/dead_tree2.glb',        { x:  21, y: 0, z: 0, scale: 1 });
+loadModel('assets/trees/dead_tree3.glb',        { x:  24, y: 0, z: 0, scale: 1 });
+loadModel('assets/trees/dead_tree4.glb',        { x:  27, y: 0, z: 0, scale: 1 });
+loadModel('assets/trees/dead_tree5.glb',        { x:  30, y: 0, z: 0, scale: 1 });
+loadModel('assets/trees/dead_tree6.glb',        { x:  33, y: 0, z: 0, scale: 1 });
 
-// ── Gold entry posts ──────────────────────────────
-const entryMat = new THREE.MeshLambertMaterial({ color: 0xd4af37 });
-for (const side of [-1, 1]) {
-  const post = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.2, 0.2, WALL_H * 1.5, 8), entryMat
-  );
-  post.position.set(side * (PATH_W / 2), (WALL_H * 1.5) / 2, SPIRAL_A - 1.5);
-  post.castShadow = true;
-  scene.add(post);
-}
+// ─── TVs (z = 6, behind the trees) ──────────────────────────────────────────
+loadModel('assets/tv_models/old_crt_grey.glb',  { x: -8, y: 0, z: 6, scale: 1 });
+loadModel('assets/tv_models/oled_black.glb',    { x: -4, y: 0, z: 6, scale: 1 });
+loadModel('assets/tv_models/oled_silver.glb',   { x:  0, y: 0, z: 6, scale: 1 });
+loadModel('assets/tv_models/plastic_crt.glb',   { x:  4, y: 0, z: 6, scale: 1 });
+loadModel('assets/tv_models/wood_crt.glb',      { x:  8, y: 0, z: 6, scale: 1 });
 
-// ── Controls ──────────────────────────────────────
-const controls = new PointerLockControls(camera, renderer.domElement);
-scene.add(controls.getObject());
+// ─── Resize ──────────────────────────────────────────────────────────────────
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
 
-// Spawn at entrance facing into spiral
-camera.position.set(centerline[0].x, 1.7, centerline[0].z + 4);
-const lookTarget = centerline[10];
-camera.lookAt(lookTarget.x, 1.7, lookTarget.z);
-
-const overlay = document.getElementById('overlay');
-overlay.addEventListener('click', () => controls.lock());
-controls.addEventListener('lock',   () => overlay.style.display = 'none');
-controls.addEventListener('unlock', () => overlay.style.display = 'flex');
-
-const keys = {};
-document.addEventListener('keydown', e => { keys[e.code] = true;  e.preventDefault(); });
-document.addEventListener('keyup',   e => { keys[e.code] = false; });
-
-// ── Animate ───────────────────────────────────────
-let prev = performance.now();
+// ─── Render loop ─────────────────────────────────────────────────────────────
 function animate() {
   requestAnimationFrame(animate);
-  if (controls.isLocked) {
-    const now   = performance.now();
-    const delta = Math.min((now - prev) / 1000, 0.1);
-    prev = now;
-    const speed = (keys['ShiftLeft'] || keys['ShiftRight']) ? 10 : 5;
-    const dir   = new THREE.Vector3();
-    if (keys['KeyW'] || keys['ArrowUp'])    dir.z -= 1;
-    if (keys['KeyS'] || keys['ArrowDown'])  dir.z += 1;
-    if (keys['KeyA'] || keys['ArrowLeft'])  dir.x -= 1;
-    if (keys['KeyD'] || keys['ArrowRight']) dir.x += 1;
-    dir.normalize();
-    controls.moveForward(-dir.z * speed * delta);
-    controls.moveRight(dir.x * speed * delta);
-    camera.position.y = 5.7;
-  } else {
-    prev = performance.now();
-  }
+  controls.update();
   renderer.render(scene, camera);
 }
 animate();
-
-window.addEventListener('resize', () => {
-  camera.aspect = innerWidth / innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth, innerHeight);
-});
 </script>
+
 </body>
 </html>
