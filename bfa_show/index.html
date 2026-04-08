@@ -236,14 +236,14 @@ function animate() {
     prev = now;
     const speed = (keys['ShiftLeft'] || keys['ShiftRight']) ? 10 : 5;
     const dir   = new THREE.Vector3();
-    if (keys['KeyW'] || keys['ArrowUp'])    dir.z -= 1;
-    if (keys['KeyS'] || keys['ArrowDown'])  dir.z += 1;
-    if (keys['KeyA'] || keys['ArrowLeft'])  dir.x -= 1;
-    if (keys['KeyD'] || keys['ArrowRight']) dir.x += 1;
+    if (keys['KeyW'] || keys['ArrowUp'])    dir.z -= 2;
+    if (keys['KeyS'] || keys['ArrowDown'])  dir.z += 2;
+    if (keys['KeyA'] || keys['ArrowLeft'])  dir.x -= 2;
+    if (keys['KeyD'] || keys['ArrowRight']) dir.x += 2;
     dir.normalize();
     controls.moveForward(-dir.z * speed * delta);
     controls.moveRight(dir.x * speed * delta);
-    camera.position.y = 5.7;
+    camera.position.y = 3.7;
   } else {
     prev = performance.now();
   }
