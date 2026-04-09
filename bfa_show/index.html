@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Tree Ring World</title>
+<title>TV Placement World</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { overflow: hidden; background: #000; }
+  body { overflow: hidden; background: #000; font-family: monospace; }
 
   #crosshair {
     position: fixed;
@@ -20,7 +20,7 @@
   #crosshair::after {
     content: '';
     position: absolute;
-    background: rgba(255,255,255,0.8);
+    background: rgba(255,255,255,0.9);
   }
 
   #crosshair::before { width: 2px; height: 20px; left: 9px; top: 0; }
@@ -29,7 +29,7 @@
   #overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.75);
+    background: rgba(0,0,0,0.55);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -40,31 +40,82 @@
     z-index: 20;
     letter-spacing: 2px;
     text-transform: uppercase;
+    text-align: center;
   }
 
   #overlay h1 { font-size: 24px; margin-bottom: 8px; }
-  #overlay p  { font-size: 11px; color: #888; }
+  #overlay p  { font-size: 11px; color: #ccc; }
 
   #hint {
     position: fixed;
     bottom: 16px;
     left: 50%;
     transform: translateX(-50%);
-    color: rgba(255,255,255,0.4);
+    color: rgba(255,255,255,0.65);
     font: 11px monospace;
     letter-spacing: 2px;
     pointer-events: none;
     z-index: 10;
+    text-align: center;
+  }
+
+  #panel {
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 30;
+    background: rgba(0,0,0,0.65);
+    color: #fff;
+    padding: 10px 12px;
+    font: 12px/1.5 monospace;
+    white-space: pre-wrap;
+    max-width: 470px;
+  }
+
+  #error {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    z-index: 40;
+    background: rgba(120,0,0,0.92);
+    color: #fff;
+    padding: 10px 12px;
+    font: 12px/1.5 monospace;
+    white-space: pre-wrap;
+    max-width: 520px;
+    display: none;
+  }
+
+  #legend {
+    position: fixed;
+    right: 12px;
+    bottom: 12px;
+    z-index: 15;
+    background: rgba(0,0,0,0.55);
+    color: #fff;
+    padding: 10px 12px;
+    font: 12px/1.5 monospace;
   }
 </style>
 </head>
 <body>
 <div id="crosshair"></div>
+
 <div id="overlay">
-  <h1>Tree Ring World</h1>
-  <p>Click to enter — ESC to release</p>
+  <h1>TV Placement World</h1>
+  <p>Click anywhere to enter</p>
+  <p>ESC to release</p>
 </div>
+
 <div id="hint">WASD · MOUSE LOOK · SHIFT SPRINT</div>
+<div id="panel">Starting…</div>
+<div id="error"></div>
+<div id="legend">
+  White grid = 10-unit squares<br>
+  Red marker = TV target position<br>
+  Yellow pole = easier to spot<br>
+  Cyan disc = spawn point
+</div>
 
 <script type="importmap">
 {
@@ -77,336 +128,394 @@
 <script type="module">
 import * as THREE from 'three';
 
-const { PointerLockControls } = await import(
-  'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/jsm/controls/PointerLockControls.js'
-);
+const panel = document.getElementById('panel');
+const errorBox = document.getElementById('error');
+const overlay = document.getElementById('overlay');
 
-const { GLTFLoader } = await import(
-  'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/jsm/loaders/GLTFLoader.js'
-);
-
-// ── Renderer ──────────────────────────────────────────────────────────────────
-const renderer = new THREE.WebGLRenderer({ antialias: false });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
-renderer.setSize(innerWidth, innerHeight);
-
-// PERF: Shadows disabled entirely — the shadow map was computed every frame
-// even though tree meshes had castShadow = false, the DirectionalLight still
-// maintained a 512x512 depth pass. Removing this cuts ~1 full render pass.
-renderer.shadowMap.enabled = false;
-
-renderer.outputEncoding = THREE.sRGBEncoding;
-document.body.appendChild(renderer.domElement);
-
-// ── Scene ─────────────────────────────────────────────────────────────────────
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x87ceeb);
-
-// PERF: Reduced fog density from 0.008 to 0.005.
-// Denser fog forces the GPU to shade more distant fragments before discarding
-// them, increasing overdraw. Lighter fog lets the frustum culler do more work.
-scene.fog = new THREE.FogExp2(0x87ceeb, 0.005);
-
-// ── Camera ────────────────────────────────────────────────────────────────────
-const camera = new THREE.PerspectiveCamera(72, innerWidth / innerHeight, 0.1, 500);
-
-// ── Lights ────────────────────────────────────────────────────────────────────
-scene.add(new THREE.AmbientLight(0xffffff, 0.7));
-
-// PERF: castShadow removed from the sun light — no shadow map is computed at all.
-const sun = new THREE.DirectionalLight(0xfff4d0, 1.0);
-sun.position.set(40, 80, 20);
-scene.add(sun);
-
-scene.add(new THREE.HemisphereLight(0x87ceeb, 0x3d6b30, 0.4));
-
-// ── Ground ────────────────────────────────────────────────────────────────────
-// PERF: receiveShadow removed — no shadow map means nothing to receive.
-const ground = new THREE.Mesh(
-  new THREE.PlaneGeometry(800, 800),
-  new THREE.MeshLambertMaterial({ color: 0x4a7c3f })
-);
-ground.rotation.x = -Math.PI / 2;
-scene.add(ground);
-
-// ── World layout ──────────────────────────────────────────────────────────────
-const START_POINT = new THREE.Vector3(0, 0, 0);
-const TREE_RING_RADIUS = 42;
-const CLUSTER_COUNT = 5;
-const TREES_PER_CLUSTER = 5;
-
-// ── Load models ───────────────────────────────────────────────────────────────
-const loader = new GLTFLoader();
-
-const modelManifest = {
-  pine: [
-    'pine_tree.glb',
-    'pine_tree2.glb',
-    'pine_tree3.glb',
-    'pine_tree4.glb',
-    'pine_tree_yellow.glb',
-    'pine_tree_yellow2.glb',
-    'pine_tree_yellow3.glb',
-    'pine_tree_yellow4.glb',
-    'pine_tree_orange.glb',
-    'pine_tree_orange2.glb',
-    'pine_tree_orange3.glb',
-    'pine_tree_orange4.glb',
-  ],
-  dead: [
-    'dead_pine.glb',
-    'dead_pine2.glb',
-    'dead_tree.glb',
-    'dead_tree2.glb',
-    'dead_tree3.glb',
-    'dead_tree4.glb',
-    'dead_tree5.glb',
-    'dead_tree6.glb',
-  ],
-  ico: [
-    'ico_tree.glb',
-    'ico_tree2.glb',
-    'ico_tree3.glb',
-    'ico_tree_yellow.glb',
-    'ico_tree_yellow2.glb',
-    'ico_tree_yellow3.glb',
-    'ico_tree_orange.glb',
-    'ico_tree_orange2.glb',
-    'ico_tree_orange3.glb',
-  ]
-};
-
-// treeModels stores raw loaded scenes (not cloned).
-const treeModels = {};
-
-function loadGLTF(url) {
-  return new Promise((resolve, reject) => {
-    loader.load(url, resolve, undefined, reject);
-  });
+function setPanel(text) {
+  panel.textContent = text;
 }
 
-function rand(min, max) {
-  return min + Math.random() * (max - min);
+function showError(err) {
+  console.error(err);
+  errorBox.style.display = 'block';
+  errorBox.textContent = String(err && err.stack ? err.stack : err);
+  setPanel('Error. Check red box.');
 }
 
-function choose(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
+window.addEventListener('error', (e) => showError(e.error || e.message));
+window.addEventListener('unhandledrejection', (e) => showError(e.reason));
 
-function shuffle(array) {
-  const a = [...array];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
+try {
+  const { PointerLockControls } = await import(
+    'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/jsm/controls/PointerLockControls.js'
+  );
 
-// ── Tree placement using InstancedMesh ────────────────────────────────────────
-//
-// PERF: The original code called gltf.scene.clone(true) for every tree and
-// added each clone to the scene individually. With 25 trees that is 25+ separate
-// draw calls per frame (more if meshes have multiple materials).
-//
-// InstancedMesh renders all instances of the same geometry in a SINGLE draw
-// call by uploading a matrix per instance to the GPU. For N trees sharing a
-// geometry this drops from N draw calls to 1.
-//
-// Strategy:
-//   1. Collect all desired tree placements (position, rotation, scale, variant).
-//   2. Group placements by their source GLTF scene (the "variant").
-//   3. For each variant, extract every child Mesh and build one InstancedMesh
-//      per child geometry, applying the per-instance transform on top of the
-//      child's local transform.
-//
-// This preserves multi-mesh GLTFs (e.g. trunk + foliage as separate meshes)
-// while still batching instances.
+  const { GLTFLoader } = await import(
+    'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/jsm/loaders/GLTFLoader.js'
+  );
 
-function buildInstances(placements) {
-  // Group placements by variant reference (object identity as key).
-  const variantMap = new Map();
+  // ── Renderer ────────────────────────────────────────────────────────────────
+  const renderer = new THREE.WebGLRenderer({ antialias: false });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.shadowMap.enabled = false;
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  document.body.appendChild(renderer.domElement);
 
-  for (const p of placements) {
-    if (!variantMap.has(p.variant)) variantMap.set(p.variant, []);
-    variantMap.get(p.variant).push(p);
+  // ── Scene ───────────────────────────────────────────────────────────────────
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x87ceeb);
+  scene.fog = new THREE.FogExp2(0x87ceeb, 0.005);
+
+  // ── Camera ──────────────────────────────────────────────────────────────────
+  const camera = new THREE.PerspectiveCamera(
+    72,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    500
+  );
+
+  // ── Lights ──────────────────────────────────────────────────────────────────
+  scene.add(new THREE.AmbientLight(0xffffff, 0.9));
+
+  const sun = new THREE.DirectionalLight(0xfff4d0, 1.1);
+  sun.position.set(40, 80, 20);
+  scene.add(sun);
+
+  scene.add(new THREE.HemisphereLight(0x87ceeb, 0x3d6b30, 0.5));
+
+  // ── Ground ──────────────────────────────────────────────────────────────────
+  const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(800, 800),
+    new THREE.MeshLambertMaterial({ color: 0x4a7c3f })
+  );
+  ground.rotation.x = -Math.PI / 2;
+  scene.add(ground);
+
+  // ── Visual helpers ──────────────────────────────────────────────────────────
+  const grid = new THREE.GridHelper(800, 80, 0xffffff, 0x888888);
+  grid.position.y = 0.02;
+  scene.add(grid);
+
+  const axes = new THREE.AxesHelper(20);
+  scene.add(axes);
+
+  const spawnMarker = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.6, 0.6, 0.2, 24),
+    new THREE.MeshBasicMaterial({ color: 0x00ffff })
+  );
+  spawnMarker.position.set(0, 0.11, 0);
+  scene.add(spawnMarker);
+
+  // ── World layout ────────────────────────────────────────────────────────────
+  const START_POINT = new THREE.Vector3(0, 0, 8);
+
+  /*
+    Edit TV coordinates here only.
+  */
+  const TV_PLACEMENTS = [
+    { model: 'wood_crt',     x:   0, y: 0, z: -26, ry: 0.0, scale: 3.0 }, // 0
+    { model: 'plastic_crt',  x:  24, y: 0, z:  -8, ry: 1.2, scale: 3.0 }, // 1
+    { model: 'old_crt_grey', x:  15, y: 0, z:  20, ry: 2.4, scale: 3.0 }, // 2
+    { model: 'oled_silver',  x: -15, y: 0, z:  20, ry: 0.7, scale: 3.0 }, // 3
+    { model: 'oled_black',   x: -24, y: 0, z:  -8, ry: 3.0, scale: 3.0 }, // 4
+  ];
+
+  // ── Placement markers / labels ─────────────────────────────────────────────
+  function addPlacementMarkers() {
+    TV_PLACEMENTS.forEach((entry, index) => {
+      const x = entry.x ?? 0;
+      const y = entry.y ?? 0;
+      const z = entry.z ?? 0;
+
+      const marker = new THREE.Mesh(
+        new THREE.BoxGeometry(0.9, 0.9, 0.9),
+        new THREE.MeshBasicMaterial({ color: 0xff0000 })
+      );
+      marker.position.set(x, y + 0.45, z);
+      scene.add(marker);
+
+      const pole = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.05, 0.05, 2.5, 8),
+        new THREE.MeshBasicMaterial({ color: 0xffff00 })
+      );
+      pole.position.set(x, y + 1.25, z);
+      scene.add(pole);
+
+      const ring = new THREE.Mesh(
+        new THREE.TorusGeometry(0.7, 0.06, 8, 24),
+        new THREE.MeshBasicMaterial({ color: 0xffffff })
+      );
+      ring.rotation.x = Math.PI / 2;
+      ring.position.set(x, y + 0.03, z);
+      scene.add(ring);
+
+      const label = makeTextSprite(
+        `${index}: ${entry.model} (${x}, ${y}, ${z})`,
+        { fontSize: 26, padding: 10 }
+      );
+      label.position.set(x, y + 3.0, z);
+      scene.add(label);
+    });
   }
 
-  const dummy = new THREE.Object3D();
+  function makeTextSprite(text, opts = {}) {
+    const fontSize = opts.fontSize ?? 28;
+    const padding = opts.padding ?? 8;
 
-  for (const [variantScene, instances] of variantMap) {
-    // Collect leaf Meshes with their local-to-scene transforms.
-    const meshNodes = [];
-    variantScene.traverse((child) => {
-      if (child.isMesh) meshNodes.push(child);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    ctx.font = `${fontSize}px monospace`;
+    const textWidth = Math.ceil(ctx.measureText(text).width);
+
+    canvas.width = textWidth + padding * 2;
+    canvas.height = fontSize + padding * 2;
+
+    ctx.font = `${fontSize}px monospace`;
+    ctx.fillStyle = 'rgba(0,0,0,0.75)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(1, 1, canvas.width - 2, canvas.height - 2);
+
+    ctx.fillStyle = 'white';
+    ctx.textBaseline = 'top';
+    ctx.fillText(text, padding, padding);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.minFilter = THREE.LinearFilter;
+
+    const material = new THREE.SpriteMaterial({
+      map: texture,
+      depthTest: false,
+      depthWrite: false
     });
 
-    for (const meshNode of meshNodes) {
-      // Bake the mesh node's local-to-scene transform once.
-      meshNode.updateWorldMatrix(true, false);
-      const localMatrix = meshNode.matrixWorld.clone();
+    const sprite = new THREE.Sprite(material);
+    const scale = 0.03;
+    sprite.scale.set(canvas.width * scale, canvas.height * scale, 1);
 
-      const instMesh = new THREE.InstancedMesh(
-        meshNode.geometry,
-        meshNode.material,
-        instances.length
-      );
-      instMesh.castShadow = false;
-      instMesh.receiveShadow = false;
-
-      instances.forEach((p, i) => {
-        // Compose the per-instance world transform.
-        dummy.position.set(p.x, p.y, p.z);
-        dummy.rotation.set(0, p.ry, 0);
-        dummy.scale.setScalar(p.scale);
-        dummy.updateMatrix();
-
-        // Multiply: instanceWorld = instanceTransform x meshLocalOffset
-        const combined = dummy.matrix.clone().multiply(localMatrix);
-        instMesh.setMatrixAt(i, combined);
-      });
-
-      instMesh.instanceMatrix.needsUpdate = true;
-      scene.add(instMesh);
-    }
-  }
-}
-
-function computePlacements() {
-  const placements = [];
-
-  for (let c = 0; c < CLUSTER_COUNT; c++) {
-    const clusterAngle = (c / CLUSTER_COUNT) * Math.PI * 2;
-    const cx = START_POINT.x + Math.cos(clusterAngle) * TREE_RING_RADIUS;
-    const cz = START_POINT.z + Math.sin(clusterAngle) * TREE_RING_RADIUS;
-
-    const clusterTypes = shuffle([
-      'pine',
-      'dead',
-      'ico',
-      choose(['pine', 'dead', 'ico']),
-      choose(['pine', 'dead', 'ico'])
-    ]);
-
-    for (let t = 0; t < TREES_PER_CLUSTER; t++) {
-      const treeType = clusterTypes[t];
-      const treeArray = treeModels[treeType];
-      if (!treeArray || treeArray.length === 0) continue;
-
-      const treeAngle = (t / TREES_PER_CLUSTER) * Math.PI * 2 + rand(-0.15, 0.15);
-      const treeDistance = rand(3, 6);
-
-      placements.push({
-        variant: choose(treeArray),
-        x: cx + Math.cos(treeAngle) * treeDistance,
-        y: 0,
-        z: cz + Math.sin(treeAngle) * treeDistance,
-        ry: rand(0, Math.PI * 2),
-        scale: rand(0.9, 1.15),
-      });
-    }
+    return sprite;
   }
 
-  return placements;
-}
+  addPlacementMarkers();
 
-async function loadAllModels() {
-  const jobs = [];
+  // ── Load TV models ──────────────────────────────────────────────────────────
+  const loader = new GLTFLoader();
+  const MODEL_BASE_PATH = '../assets/tv_models/';
 
-  for (const [type, files] of Object.entries(modelManifest)) {
-    treeModels[type] = [];
+  const modelManifest = {
+    wood_crt: 'wood_crt.glb',
+    plastic_crt: 'plastic_crt.glb',
+    old_crt_grey: 'old_crt_grey.glb',
+    oled_silver: 'oled_silver.glb',
+    oled_black: 'oled_black.glb',
+  };
 
-    for (const file of files) {
-      jobs.push(
-        loadGLTF(`../assets/trees/${file}`)
-          .then((gltf) => {
-            treeModels[type].push(gltf.scene);
-          })
-          .catch((error) => {
-            console.error(`Error loading ${file}:`, error);
-          })
-      );
-    }
+  const tvModels = {};
+
+  function loadGLTF(url) {
+    return new Promise((resolve, reject) => {
+      loader.load(url, resolve, undefined, reject);
+    });
   }
 
-  await Promise.all(jobs);
+  function cloneModel(sceneRoot) {
+    return sceneRoot.clone(true);
+  }
 
-  const placements = computePlacements();
-  buildInstances(placements);
-}
+  function setAllMeshesDoubleSided(root) {
+    root.traverse((child) => {
+      if (!child.isMesh) return;
 
-loadAllModels();
+      if (Array.isArray(child.material)) {
+        child.material.forEach((mat) => {
+          if (mat) mat.side = THREE.DoubleSide;
+        });
+      } else if (child.material) {
+        child.material.side = THREE.DoubleSide;
+      }
+    });
+  }
 
-// ── Controls ──────────────────────────────────────────────────────────────────
-const controls = new PointerLockControls(camera, renderer.domElement);
-scene.add(controls.getObject());
+  function centerAndGroundModel(modelRoot) {
+    modelRoot.updateMatrixWorld(true);
 
-camera.position.set(START_POINT.x, 1.7, START_POINT.z);
-camera.lookAt(START_POINT.x + 1, 1.7, START_POINT.z);
+    const box = new THREE.Box3().setFromObject(modelRoot);
+    if (box.isEmpty()) return;
 
-const overlay = document.getElementById('overlay');
-overlay.addEventListener('click', () => controls.lock());
-controls.addEventListener('lock',   () => overlay.style.display = 'none');
-controls.addEventListener('unlock', () => overlay.style.display = 'flex');
+    const center = new THREE.Vector3();
+    const size = new THREE.Vector3();
 
-const keys = {};
-document.addEventListener('keydown', (e) => { keys[e.code] = true;  e.preventDefault(); });
-document.addEventListener('keyup',   (e) => { keys[e.code] = false; });
+    box.getCenter(center);
+    box.getSize(size);
 
-// ── Animate ───────────────────────────────────────────────────────────────────
-// PERF: _moveDir is allocated ONCE here at module scope instead of
-// new THREE.Vector3() on every animation frame. Repeated allocation creates
-// garbage-collection pressure that causes micro-stutters during mouse-look.
-const _moveDir = new THREE.Vector3();
+    // Shift model so its visible geometry is centered on X/Z
+    // and its bottom sits exactly on Y=0.
+    modelRoot.position.x -= center.x;
+    modelRoot.position.z -= center.z;
+    modelRoot.position.y -= box.min.y;
+  }
 
-let prev = performance.now();
+  function addModelPlacements() {
+    TV_PLACEMENTS.forEach((entry, index) => {
+      const source = tvModels[entry.model];
+      if (!source) {
+        console.warn(`Missing model for placement ${index}: ${entry.model}`);
+        return;
+      }
 
-function animate() {
-  requestAnimationFrame(animate);
+      const wrapper = new THREE.Group();
+      wrapper.position.set(entry.x ?? 0, entry.y ?? 0, entry.z ?? 0);
+      wrapper.rotation.set(0, entry.ry ?? 0, 0);
+      wrapper.scale.setScalar(entry.scale ?? 1);
 
-  if (controls.isLocked) {
-    const now   = performance.now();
+      const instance = cloneModel(source);
+      setAllMeshesDoubleSided(instance);
+      wrapper.add(instance);
+
+      // Important: fix mismatched pivots/origins from Blender export
+      centerAndGroundModel(instance);
+
+      scene.add(wrapper);
+    });
+  }
+
+  async function loadAllModels() {
+    setPanel(
+`Loading TV models...
+
+If some TVs do not sit on markers, the usual cause is:
+- Blender origin/pivot offset
+- unapplied transforms
+- parent/object offsets inside the export
+
+This version auto-centers each model by its bounding box
+and drops its bottom to Y=0 at the marker.`
+    );
+
+    const jobs = Object.entries(modelManifest).map(([key, file]) => {
+      return loadGLTF(`${MODEL_BASE_PATH}${file}`)
+        .then((gltf) => {
+          tvModels[key] = gltf.scene;
+        })
+        .catch((error) => {
+          console.error(`Error loading ${file}:`, error);
+        });
+    });
+
+    await Promise.all(jobs);
+    addModelPlacements();
+
+    setPanel(
+`Ready
+
+Likely Blender issue if offsets still look wrong:
+1. Select model in Blender
+2. Object > Set Origin > Origin to Geometry
+3. Ctrl+A > Apply Rotation & Scale
+4. Make sure model base sits at Z=0 before export
+5. Re-export as glb
+
+Current model path:
+${MODEL_BASE_PATH}
+
+Loaded models:
+- wood_crt: ${tvModels.wood_crt ? 'ok' : 'missing'}
+- plastic_crt: ${tvModels.plastic_crt ? 'ok' : 'missing'}
+- old_crt_grey: ${tvModels.old_crt_grey ? 'ok' : 'missing'}
+- oled_silver: ${tvModels.oled_silver ? 'ok' : 'missing'}
+- oled_black: ${tvModels.oled_black ? 'ok' : 'missing'}`
+    );
+  }
+
+  loadAllModels();
+
+  // ── Controls ────────────────────────────────────────────────────────────────
+  const controls = new PointerLockControls(camera, renderer.domElement);
+  scene.add(controls.getObject());
+
+  camera.position.set(START_POINT.x, 1.7, START_POINT.z);
+  camera.lookAt(0, 1.7, 0);
+
+  function tryLock() {
+    controls.lock();
+  }
+
+  overlay.addEventListener('click', tryLock);
+  renderer.domElement.addEventListener('click', tryLock);
+  document.body.addEventListener('click', tryLock);
+
+  controls.addEventListener('lock', () => {
+    overlay.style.display = 'none';
+  });
+
+  controls.addEventListener('unlock', () => {
+    overlay.style.display = 'flex';
+  });
+
+  const keys = {};
+  document.addEventListener('keydown', (e) => {
+    keys[e.code] = true;
+  });
+  document.addEventListener('keyup', (e) => {
+    keys[e.code] = false;
+  });
+
+  // ── Animate ─────────────────────────────────────────────────────────────────
+  const _moveDir = new THREE.Vector3();
+  let prev = performance.now();
+
+  function animate() {
+    requestAnimationFrame(animate);
+
+    const now = performance.now();
     const delta = Math.min((now - prev) / 1000, 0.1);
     prev = now;
 
-    const speed = (keys['ShiftLeft'] || keys['ShiftRight']) ? 10 : 5;
+    if (controls.isLocked) {
+      const speed = (keys['ShiftLeft'] || keys['ShiftRight']) ? 10 : 5;
 
-    // Reuse the pre-allocated vector — just reset it each frame.
-    _moveDir.set(0, 0, 0);
+      _moveDir.set(0, 0, 0);
 
-    if (keys['KeyW'] || keys['ArrowUp'])    _moveDir.z -= 1;
-    if (keys['KeyS'] || keys['ArrowDown'])  _moveDir.z += 1;
-    if (keys['KeyA'] || keys['ArrowLeft'])  _moveDir.x -= 1;
-    if (keys['KeyD'] || keys['ArrowRight']) _moveDir.x += 1;
+      if (keys['KeyW'] || keys['ArrowUp'])    _moveDir.z -= 1;
+      if (keys['KeyS'] || keys['ArrowDown'])  _moveDir.z += 1;
+      if (keys['KeyA'] || keys['ArrowLeft'])  _moveDir.x -= 1;
+      if (keys['KeyD'] || keys['ArrowRight']) _moveDir.x += 1;
 
-    _moveDir.normalize();
+      if (_moveDir.lengthSq() > 0) {
+        _moveDir.normalize();
+        controls.moveForward(-_moveDir.z * speed * delta);
+        controls.moveRight(_moveDir.x * speed * delta);
+      }
 
-    controls.moveForward(-_moveDir.z * speed * delta);
-    controls.moveRight(   _moveDir.x * speed * delta);
+      camera.position.y = 1.7;
+    }
 
-    camera.position.y = 3.7;
-  } else {
-    prev = performance.now();
+    renderer.render(scene, camera);
   }
 
-  renderer.render(scene, camera);
+  animate();
+
+  setInterval(() => {
+    console.log(
+      'Triangles:', renderer.info.render.triangles,
+      'Draw calls:', renderer.info.render.calls
+    );
+  }, 1000);
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+} catch (err) {
+  showError(err);
 }
-
-animate();
-
-// Debug stats
-setInterval(() => {
-  console.log(
-    'Triangles:', renderer.info.render.triangles,
-    'Draw calls:', renderer.info.render.calls
-  );
-}, 1000);
-
-// ── Resize ────────────────────────────────────────────────────────────────────
-window.addEventListener('resize', () => {
-  camera.aspect = innerWidth / innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth, innerHeight);
-});
 </script>
 </body>
 </html>
