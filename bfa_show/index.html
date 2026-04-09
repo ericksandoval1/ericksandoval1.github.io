@@ -1,123 +1,152 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8" />
-<title>TV Placement World</title>
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { overflow: hidden; background: #000; font-family: monospace; }
+  <meta charset="UTF-8" />
+  <title>TV Placement World</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-  #crosshair {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    pointer-events: none;
-    z-index: 10;
-  }
+    body {
+      overflow: hidden;
+      background: #000;
+      font-family: monospace;
+    }
 
-  #crosshair::before,
-  #crosshair::after {
-    content: '';
-    position: absolute;
-    background: rgba(255,255,255,0.9);
-  }
+    #crosshair {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 10;
+    }
 
-  #crosshair::before { width: 2px; height: 20px; left: 9px; top: 0; }
-  #crosshair::after  { width: 20px; height: 2px; top: 9px; left: 0; }
+    #crosshair::before,
+    #crosshair::after {
+      content: '';
+      position: absolute;
+      background: rgba(255, 255, 255, 0.9);
+    }
 
-  #overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.55);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    font: 14px/2 monospace;
-    cursor: pointer;
-    z-index: 20;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    text-align: center;
-  }
+    #crosshair::before {
+      width: 2px;
+      height: 20px;
+      left: 9px;
+      top: 0;
+    }
 
-  #overlay h1 { font-size: 24px; margin-bottom: 8px; }
-  #overlay p  { font-size: 11px; color: #ccc; }
+    #crosshair::after {
+      width: 20px;
+      height: 2px;
+      top: 9px;
+      left: 0;
+    }
 
-  #hint {
-    position: fixed;
-    bottom: 16px;
-    left: 50%;
-    transform: translateX(-50%);
-    color: rgba(255,255,255,0.65);
-    font: 11px monospace;
-    letter-spacing: 2px;
-    pointer-events: none;
-    z-index: 10;
-    text-align: center;
-  }
+    #overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font: 14px/2 monospace;
+      cursor: pointer;
+      z-index: 20;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      text-align: center;
+    }
 
-  #panel {
-    position: fixed;
-    top: 12px;
-    left: 12px;
-    z-index: 30;
-    background: rgba(0,0,0,0.65);
-    color: #fff;
-    padding: 10px 12px;
-    font: 12px/1.5 monospace;
-    white-space: pre-wrap;
-    max-width: 470px;
-  }
+    #overlay h1 {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
 
-  #error {
-    position: fixed;
-    top: 12px;
-    right: 12px;
-    z-index: 40;
-    background: rgba(120,0,0,0.92);
-    color: #fff;
-    padding: 10px 12px;
-    font: 12px/1.5 monospace;
-    white-space: pre-wrap;
-    max-width: 520px;
-    display: none;
-  }
+    #overlay p {
+      font-size: 11px;
+      color: #ccc;
+    }
 
-  #legend {
-    position: fixed;
-    right: 12px;
-    bottom: 12px;
-    z-index: 15;
-    background: rgba(0,0,0,0.55);
-    color: #fff;
-    padding: 10px 12px;
-    font: 12px/1.5 monospace;
-  }
-</style>
+    #hint {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255, 255, 255, 0.65);
+      font: 11px monospace;
+      letter-spacing: 2px;
+      pointer-events: none;
+      z-index: 10;
+      text-align: center;
+    }
+
+    #panel {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      z-index: 30;
+      background: rgba(0, 0, 0, 0.65);
+      color: #fff;
+      padding: 10px 12px;
+      font: 12px/1.5 monospace;
+      white-space: pre-wrap;
+      max-width: 470px;
+    }
+
+    #error {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      z-index: 40;
+      background: rgba(120, 0, 0, 0.92);
+      color: #fff;
+      padding: 10px 12px;
+      font: 12px/1.5 monospace;
+      white-space: pre-wrap;
+      max-width: 520px;
+      display: none;
+    }
+
+    #legend {
+      position: fixed;
+      right: 12px;
+      bottom: 12px;
+      z-index: 15;
+      background: rgba(0, 0, 0, 0.55);
+      color: #fff;
+      padding: 10px 12px;
+      font: 12px/1.5 monospace;
+    }
+  </style>
 </head>
+
 <body>
-<div id="crosshair"></div>
+  <div id="crosshair"></div>
 
-<div id="overlay">
-  <h1>TV Placement World</h1>
-  <p>Click anywhere to enter</p>
-  <p>ESC to release</p>
-</div>
+  <div id="overlay">
+    <h1>TV Placement World</h1>
+    <p>Click anywhere to enter</p>
+    <p>ESC to release</p>
+  </div>
 
-<div id="hint">WASD · MOUSE LOOK · SHIFT SPRINT</div>
-<div id="panel">Starting…</div>
-<div id="error"></div>
-<div id="legend">
-  White grid = 10-unit squares<br>
-  Red marker = TV target position<br>
-  Yellow pole = easier to spot<br>
-  Cyan disc = spawn point
-</div>
+  <div id="hint">WASD · MOUSE LOOK · SHIFT SPRINT · SPACE JUMP</div>
+  <div id="panel">Starting…</div>
+  <div id="error"></div>
+  <div id="legend">
+    White grid = 10-unit squares<br>
+    Red marker = TV target position<br>
+    Yellow pole = easier to spot<br>
+    Cyan disc = spawn point
+  </div>
 
-<script type="importmap">
+  <script type="importmap">
 {
   "imports": {
     "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.module.js"
@@ -125,268 +154,311 @@
 }
 </script>
 
-<script type="module">
-import * as THREE from 'three';
+  <script type="module">
+    import * as THREE from 'three';
 
-const panel = document.getElementById('panel');
-const errorBox = document.getElementById('error');
-const overlay = document.getElementById('overlay');
+    const panel = document.getElementById('panel');
+    const errorBox = document.getElementById('error');
+    const overlay = document.getElementById('overlay');
 
-function setPanel(text) {
-  panel.textContent = text;
-}
+    function setPanel(text) {
+      panel.textContent = text;
+    }
 
-function showError(err) {
-  console.error(err);
-  errorBox.style.display = 'block';
-  errorBox.textContent = String(err && err.stack ? err.stack : err);
-  setPanel('Error. Check red box.');
-}
+    function showError(err) {
+      console.error(err);
+      errorBox.style.display = 'block';
+      errorBox.textContent = String(err && err.stack ? err.stack : err);
+      setPanel('Error. Check red box.');
+    }
 
-window.addEventListener('error', (e) => showError(e.error || e.message));
-window.addEventListener('unhandledrejection', (e) => showError(e.reason));
+    window.addEventListener('error', (e) => showError(e.error || e.message));
+    window.addEventListener('unhandledrejection', (e) => showError(e.reason));
 
-try {
-  const { PointerLockControls } = await import(
-    'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/jsm/controls/PointerLockControls.js'
-  );
-
-  const { GLTFLoader } = await import(
-    'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/jsm/loaders/GLTFLoader.js'
-  );
-
-  // ── Renderer ────────────────────────────────────────────────────────────────
-  const renderer = new THREE.WebGLRenderer({ antialias: false });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.shadowMap.enabled = false;
-  renderer.outputEncoding = THREE.sRGBEncoding;
-  document.body.appendChild(renderer.domElement);
-
-  // ── Scene ───────────────────────────────────────────────────────────────────
-  const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x87ceeb);
-  scene.fog = new THREE.FogExp2(0x87ceeb, 0.005);
-
-  // ── Camera ──────────────────────────────────────────────────────────────────
-  const camera = new THREE.PerspectiveCamera(
-    72,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    500
-  );
-
-  // ── Lights ──────────────────────────────────────────────────────────────────
-  scene.add(new THREE.AmbientLight(0xffffff, 0.9));
-
-  const sun = new THREE.DirectionalLight(0xfff4d0, 1.1);
-  sun.position.set(40, 80, 20);
-  scene.add(sun);
-
-  scene.add(new THREE.HemisphereLight(0x87ceeb, 0x3d6b30, 0.5));
-
-  // ── Ground ──────────────────────────────────────────────────────────────────
-  const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(800, 800),
-    new THREE.MeshLambertMaterial({ color: 0x4a7c3f })
-  );
-  ground.rotation.x = -Math.PI / 2;
-  scene.add(ground);
-
-  // ── Visual helpers ──────────────────────────────────────────────────────────
-  const grid = new THREE.GridHelper(800, 80, 0xffffff, 0x888888);
-  grid.position.y = 0.02;
-  scene.add(grid);
-
-  const axes = new THREE.AxesHelper(20);
-  scene.add(axes);
-
-  const spawnMarker = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.6, 0.6, 0.2, 24),
-    new THREE.MeshBasicMaterial({ color: 0x00ffff })
-  );
-  spawnMarker.position.set(0, 0.11, 0);
-  scene.add(spawnMarker);
-
-  // ── World layout ────────────────────────────────────────────────────────────
-  const START_POINT = new THREE.Vector3(0, 0, 8);
-
-  /*
-    Edit TV coordinates here only.
-  */
-  const TV_PLACEMENTS = [
-    { model: 'wood_crt',     x:   0, y: 0, z: -26, ry: 0.0, scale: 3.0 }, // 0
-    { model: 'plastic_crt',  x:  24, y: 0, z:  -8, ry: 1.2, scale: 3.0 }, // 1
-    { model: 'old_crt_grey', x:  15, y: 0, z:  20, ry: 2.4, scale: 3.0 }, // 2
-    { model: 'oled_silver',  x: -15, y: 0, z:  20, ry: 0.7, scale: 3.0 }, // 3
-    { model: 'oled_black',   x: -24, y: 0, z:  -8, ry: 3.0, scale: 3.0 }, // 4
-  ];
-
-  // ── Placement markers / labels ─────────────────────────────────────────────
-  function addPlacementMarkers() {
-    TV_PLACEMENTS.forEach((entry, index) => {
-      const x = entry.x ?? 0;
-      const y = entry.y ?? 0;
-      const z = entry.z ?? 0;
-
-      const marker = new THREE.Mesh(
-        new THREE.BoxGeometry(0.9, 0.9, 0.9),
-        new THREE.MeshBasicMaterial({ color: 0xff0000 })
+    try {
+      const { PointerLockControls } = await import(
+        'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/jsm/controls/PointerLockControls.js'
       );
-      marker.position.set(x, y + 0.45, z);
-      scene.add(marker);
 
-      const pole = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.05, 0.05, 2.5, 8),
-        new THREE.MeshBasicMaterial({ color: 0xffff00 })
+      const { GLTFLoader } = await import(
+        'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/jsm/loaders/GLTFLoader.js'
       );
-      pole.position.set(x, y + 1.25, z);
-      scene.add(pole);
 
-      const ring = new THREE.Mesh(
-        new THREE.TorusGeometry(0.7, 0.06, 8, 24),
-        new THREE.MeshBasicMaterial({ color: 0xffffff })
+      // ── Renderer ────────────────────────────────────────────────────────────────
+      const renderer = new THREE.WebGLRenderer({ antialias: false });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.shadowMap.enabled = false;
+      renderer.outputEncoding = THREE.sRGBEncoding;
+      document.body.appendChild(renderer.domElement);
+
+      // ── Scene ───────────────────────────────────────────────────────────────────
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x87ceeb);
+      scene.fog = new THREE.FogExp2(0x87ceeb, 0.005);
+
+      // ── Camera ──────────────────────────────────────────────────────────────────
+      const camera = new THREE.PerspectiveCamera(
+        72,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        500
       );
-      ring.rotation.x = Math.PI / 2;
-      ring.position.set(x, y + 0.03, z);
-      scene.add(ring);
 
-      const label = makeTextSprite(
-        `${index}: ${entry.model} (${x}, ${y}, ${z})`,
-        { fontSize: 26, padding: 10 }
+      // ── Lights ──────────────────────────────────────────────────────────────────
+      scene.add(new THREE.AmbientLight(0xffffff, 0.9));
+
+      const sun = new THREE.DirectionalLight(0xfff4d0, 1.1);
+      sun.position.set(40, 80, 20);
+      scene.add(sun);
+
+      scene.add(new THREE.HemisphereLight(0x87ceeb, 0x3d6b30, 0.5));
+
+      // ── Ground ──────────────────────────────────────────────────────────────────
+      const ground = new THREE.Mesh(
+        new THREE.PlaneGeometry(800, 800),
+        new THREE.MeshLambertMaterial({ color: 0x4a7c3f })
       );
-      label.position.set(x, y + 3.0, z);
-      scene.add(label);
-    });
-  }
+      ground.rotation.x = -Math.PI / 2;
+      scene.add(ground);
 
-  function makeTextSprite(text, opts = {}) {
-    const fontSize = opts.fontSize ?? 28;
-    const padding = opts.padding ?? 8;
+      // ── Visual helpers ──────────────────────────────────────────────────────────
+      const grid = new THREE.GridHelper(800, 80, 0xffffff, 0x888888);
+      grid.position.y = 0.02;
+      scene.add(grid);
 
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
+      const axes = new THREE.AxesHelper(20);
+      scene.add(axes);
 
-    ctx.font = `${fontSize}px monospace`;
-    const textWidth = Math.ceil(ctx.measureText(text).width);
+      const spawnMarker = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.6, 0.6, 0.2, 24),
+        new THREE.MeshBasicMaterial({ color: 0x00ffff })
+      );
+      spawnMarker.position.set(0, 0.11, 0);
+      scene.add(spawnMarker);
 
-    canvas.width = textWidth + padding * 2;
-    canvas.height = fontSize + padding * 2;
+      // ── World layout ────────────────────────────────────────────────────────────
+      const START_POINT = new THREE.Vector3(0, 0, 8);
 
-    ctx.font = `${fontSize}px monospace`;
-    ctx.fillStyle = 'rgba(0,0,0,0.75)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+      /*
+        Edit TV coordinates here only.
+      */
+      const TV_PLACEMENTS = [
+        { model: 'wood_crt', x: 0, y: 0, z: -68, ry: THREE.MathUtils.degToRad(180), scale: 3.0 }, // already correct
+        { model: 'plastic_crt', x: 68, y: 0, z: -24, ry: THREE.MathUtils.degToRad(125), scale: 3.0 }, // already correct
+        { model: 'old_crt_grey', x: 42, y: 0, z: 44, ry: THREE.MathUtils.degToRad(40), scale: 3.0 },
+        { model: 'oled_silver', x: -42, y: 0, z: 44, ry: THREE.MathUtils.degToRad(-40), scale: 3.0 },
+        { model: 'oled_black', x: -68, y: 0, z: -24, ry: THREE.MathUtils.degToRad(235), scale: 3.0 },
+      ];
 
-    ctx.strokeStyle = 'rgba(255,255,255,0.9)';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(1, 1, canvas.width - 2, canvas.height - 2);
+      const ICO_TREE_PLACEMENTS = [
+        { model: 'ico_tree', x: -68, y: 0, z: -36, ry: THREE.MathUtils.degToRad(0), scale: 2.0 },
+        { model: 'ico_tree2', x: -57, y: 0, z: -28, ry: THREE.MathUtils.degToRad(72), scale: 2.0 },
+        { model: 'ico_tree3', x: -61, y: 0, z: -15, ry: THREE.MathUtils.degToRad(144), scale: 2.0 },
+        { model: 'ico_tree', x: -75, y: 0, z: -15, ry: THREE.MathUtils.degToRad(216), scale: 2.0 },
+        { model: 'ico_tree2', x: -79, y: 0, z: -28, ry: THREE.MathUtils.degToRad(288), scale: 2.0 },
+      ];
+      // ── Placement markers / labels ─────────────────────────────────────────────
+      function addPlacementMarkers() {
+        TV_PLACEMENTS.forEach((entry, index) => {
+          const x = entry.x ?? 0;
+          const y = entry.y ?? 0;
+          const z = entry.z ?? 0;
 
-    ctx.fillStyle = 'white';
-    ctx.textBaseline = 'top';
-    ctx.fillText(text, padding, padding);
+          const marker = new THREE.Mesh(
+            new THREE.BoxGeometry(0.9, 0.9, 0.9),
+            new THREE.MeshBasicMaterial({ color: 0xff0000 })
+          );
+          marker.position.set(x, y + 0.45, z);
+          scene.add(marker);
 
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.minFilter = THREE.LinearFilter;
+          const pole = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.05, 0.05, 2.5, 8),
+            new THREE.MeshBasicMaterial({ color: 0xffff00 })
+          );
+          pole.position.set(x, y + 1.25, z);
+          scene.add(pole);
 
-    const material = new THREE.SpriteMaterial({
-      map: texture,
-      depthTest: false,
-      depthWrite: false
-    });
+          const ring = new THREE.Mesh(
+            new THREE.TorusGeometry(0.7, 0.06, 8, 24),
+            new THREE.MeshBasicMaterial({ color: 0xffffff })
+          );
+          ring.rotation.x = Math.PI / 2;
+          ring.position.set(x, y + 0.03, z);
+          scene.add(ring);
 
-    const sprite = new THREE.Sprite(material);
-    const scale = 0.03;
-    sprite.scale.set(canvas.width * scale, canvas.height * scale, 1);
-
-    return sprite;
-  }
-
-  addPlacementMarkers();
-
-  // ── Load TV models ──────────────────────────────────────────────────────────
-  const loader = new GLTFLoader();
-  const MODEL_BASE_PATH = '../assets/tv_models/';
-
-  const modelManifest = {
-    wood_crt: 'wood_crt.glb',
-    plastic_crt: 'plastic_crt.glb',
-    old_crt_grey: 'old_crt_grey.glb',
-    oled_silver: 'oled_silver.glb',
-    oled_black: 'oled_black.glb',
-  };
-
-  const tvModels = {};
-
-  function loadGLTF(url) {
-    return new Promise((resolve, reject) => {
-      loader.load(url, resolve, undefined, reject);
-    });
-  }
-
-  function cloneModel(sceneRoot) {
-    return sceneRoot.clone(true);
-  }
-
-  function setAllMeshesDoubleSided(root) {
-    root.traverse((child) => {
-      if (!child.isMesh) return;
-
-      if (Array.isArray(child.material)) {
-        child.material.forEach((mat) => {
-          if (mat) mat.side = THREE.DoubleSide;
+          const label = makeTextSprite(
+            `${index}: ${entry.model} (${x}, ${y}, ${z})`,
+            { fontSize: 26, padding: 10 }
+          );
+          label.position.set(x, y + 3.0, z);
+          scene.add(label);
         });
-      } else if (child.material) {
-        child.material.side = THREE.DoubleSide;
-      }
-    });
-  }
-
-  function centerAndGroundModel(modelRoot) {
-    modelRoot.updateMatrixWorld(true);
-
-    const box = new THREE.Box3().setFromObject(modelRoot);
-    if (box.isEmpty()) return;
-
-    const center = new THREE.Vector3();
-    const size = new THREE.Vector3();
-
-    box.getCenter(center);
-    box.getSize(size);
-
-    // Shift model so its visible geometry is centered on X/Z
-    // and its bottom sits exactly on Y=0.
-    modelRoot.position.x -= center.x;
-    modelRoot.position.z -= center.z;
-    modelRoot.position.y -= box.min.y;
-  }
-
-  function addModelPlacements() {
-    TV_PLACEMENTS.forEach((entry, index) => {
-      const source = tvModels[entry.model];
-      if (!source) {
-        console.warn(`Missing model for placement ${index}: ${entry.model}`);
-        return;
       }
 
-      const wrapper = new THREE.Group();
-      wrapper.position.set(entry.x ?? 0, entry.y ?? 0, entry.z ?? 0);
-      wrapper.rotation.set(0, entry.ry ?? 0, 0);
-      wrapper.scale.setScalar(entry.scale ?? 1);
+      function makeTextSprite(text, opts = {}) {
+        const fontSize = opts.fontSize ?? 28;
+        const padding = opts.padding ?? 8;
 
-      const instance = cloneModel(source);
-      setAllMeshesDoubleSided(instance);
-      wrapper.add(instance);
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
 
-      // Important: fix mismatched pivots/origins from Blender export
-      centerAndGroundModel(instance);
+        ctx.font = `${fontSize}px monospace`;
+        const textWidth = Math.ceil(ctx.measureText(text).width);
 
-      scene.add(wrapper);
-    });
-  }
+        canvas.width = textWidth + padding * 2;
+        canvas.height = fontSize + padding * 2;
 
-  async function loadAllModels() {
-    setPanel(
-`Loading TV models...
+        ctx.font = `${fontSize}px monospace`;
+        ctx.fillStyle = 'rgba(0,0,0,0.75)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(1, 1, canvas.width - 2, canvas.height - 2);
+
+        ctx.fillStyle = 'white';
+        ctx.textBaseline = 'top';
+        ctx.fillText(text, padding, padding);
+
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.minFilter = THREE.LinearFilter;
+
+        const material = new THREE.SpriteMaterial({
+          map: texture,
+          depthTest: false,
+          depthWrite: false
+        });
+
+        const sprite = new THREE.Sprite(material);
+        const scale = 0.03;
+        sprite.scale.set(canvas.width * scale, canvas.height * scale, 1);
+
+        return sprite;
+      }
+
+      addPlacementMarkers();
+
+      // ── Load TV models ──────────────────────────────────────────────────────────
+      const loader = new GLTFLoader();
+      const MODEL_BASE_PATH = '../assets/tv_models/';
+
+      const modelManifest = {
+        wood_crt: 'wood_crt.glb',
+        plastic_crt: 'plastic_crt.glb',
+        old_crt_grey: 'old_crt_grey.glb',
+        oled_silver: 'oled_silver.glb',
+        oled_black: 'oled_black.glb',
+      };
+
+      const TREE_BASE_PATH = '../assets/trees/';
+
+      const treeManifest = {
+        ico_tree: 'ico_tree.glb',
+        ico_tree2: 'ico_tree2.glb',
+        ico_tree3: 'ico_tree3.glb',
+      };
+
+      const treeModels = {};
+
+      const tvModels = {};
+
+      function loadGLTF(url) {
+        return new Promise((resolve, reject) => {
+          loader.load(url, resolve, undefined, reject);
+        });
+      }
+
+      function cloneModel(sceneRoot) {
+        return sceneRoot.clone(true);
+      }
+
+      function setAllMeshesDoubleSided(root) {
+        root.traverse((child) => {
+          if (!child.isMesh) return;
+
+          if (Array.isArray(child.material)) {
+            child.material.forEach((mat) => {
+              if (mat) mat.side = THREE.DoubleSide;
+            });
+          } else if (child.material) {
+            child.material.side = THREE.DoubleSide;
+          }
+        });
+      }
+
+      function centerAndGroundModel(modelRoot) {
+        modelRoot.updateMatrixWorld(true);
+
+        const box = new THREE.Box3().setFromObject(modelRoot);
+        if (box.isEmpty()) return;
+
+        const center = new THREE.Vector3();
+        const size = new THREE.Vector3();
+
+        box.getCenter(center);
+        box.getSize(size);
+
+        // Shift model so its visible geometry is centered on X/Z
+        // and its bottom sits exactly on Y=0.
+        modelRoot.position.x -= center.x;
+        modelRoot.position.z -= center.z;
+        modelRoot.position.y -= box.min.y;
+      }
+
+      function addModelPlacements() {
+        TV_PLACEMENTS.forEach((entry, index) => {
+          const source = tvModels[entry.model];
+          if (!source) {
+            console.warn(`Missing model for placement ${index}: ${entry.model}`);
+            return;
+          }
+
+          const wrapper = new THREE.Group();
+          wrapper.position.set(entry.x ?? 0, entry.y ?? 0, entry.z ?? 0);
+          wrapper.rotation.set(0, entry.ry ?? 0, 0);
+          wrapper.scale.setScalar(entry.scale ?? 1);
+
+          const instance = cloneModel(source);
+          setAllMeshesDoubleSided(instance);
+          wrapper.add(instance);
+
+          // Important: fix mismatched pivots/origins from Blender export
+          centerAndGroundModel(instance);
+
+          scene.add(wrapper);
+        });
+      }
+
+      function addTreePlacements() {
+        ICO_TREE_PLACEMENTS.forEach((entry) => {
+          const source = treeModels[entry.model];
+          if (!source) return;
+
+          const wrapper = new THREE.Group();
+          wrapper.position.set(entry.x, entry.y, entry.z);
+          wrapper.rotation.set(0, entry.ry ?? 0, 0);
+          wrapper.scale.setScalar(entry.scale ?? 1);
+
+          const instance = source.clone(true);
+
+          // optional: center like TVs
+          const box = new THREE.Box3().setFromObject(instance);
+          const center = new THREE.Vector3();
+          box.getCenter(center);
+
+          instance.position.x -= center.x;
+          instance.position.z -= center.z;
+          instance.position.y -= box.min.y;
+
+          wrapper.add(instance);
+          scene.add(wrapper);
+        });
+      }
+
+      async function loadAllModels() {
+        setPanel(
+          `Loading TV models...
 
 If some TVs do not sit on markers, the usual cause is:
 - Blender origin/pivot offset
@@ -395,30 +467,27 @@ If some TVs do not sit on markers, the usual cause is:
 
 This version auto-centers each model by its bounding box
 and drops its bottom to Y=0 at the marker.`
-    );
+        );
 
-    const jobs = Object.entries(modelManifest).map(([key, file]) => {
-      return loadGLTF(`${MODEL_BASE_PATH}${file}`)
-        .then((gltf) => {
-          tvModels[key] = gltf.scene;
-        })
-        .catch((error) => {
-          console.error(`Error loading ${file}:`, error);
+        const jobs = Object.entries(modelManifest).map(([key, file]) => {
+          return loadGLTF(`${MODEL_BASE_PATH}${file}`)
+            .then((gltf) => {
+              tvModels[key] = gltf.scene;
+            })
+            .catch((error) => {
+              console.error(`Error loading ${file}:`, error);
+            });
         });
-    });
 
-    await Promise.all(jobs);
-    addModelPlacements();
+        await Promise.all(jobs);
+        addModelPlacements();
 
-    setPanel(
-`Ready
+        await loadTreeModels();
+        addTreePlacements();
 
-Likely Blender issue if offsets still look wrong:
-1. Select model in Blender
-2. Object > Set Origin > Origin to Geometry
-3. Ctrl+A > Apply Rotation & Scale
-4. Make sure model base sits at Z=0 before export
-5. Re-export as glb
+        setPanel(
+          `Ready
+
 
 Current model path:
 ${MODEL_BASE_PATH}
@@ -429,93 +498,129 @@ Loaded models:
 - old_crt_grey: ${tvModels.old_crt_grey ? 'ok' : 'missing'}
 - oled_silver: ${tvModels.oled_silver ? 'ok' : 'missing'}
 - oled_black: ${tvModels.oled_black ? 'ok' : 'missing'}`
-    );
-  }
+        );
+      }
+      async function loadTreeModels() {
+        const jobs = Object.entries(treeManifest).map(([key, file]) => {
+          return loadGLTF(`${TREE_BASE_PATH}${file}`)
+            .then((gltf) => {
+              treeModels[key] = gltf.scene;
+            })
+            .catch((error) => {
+              console.error(`Error loading ${file}:`, error);
+            });
+        });
 
-  loadAllModels();
-
-  // ── Controls ────────────────────────────────────────────────────────────────
-  const controls = new PointerLockControls(camera, renderer.domElement);
-  scene.add(controls.getObject());
-
-  camera.position.set(START_POINT.x, 1.7, START_POINT.z);
-  camera.lookAt(0, 1.7, 0);
-
-  function tryLock() {
-    controls.lock();
-  }
-
-  overlay.addEventListener('click', tryLock);
-  renderer.domElement.addEventListener('click', tryLock);
-  document.body.addEventListener('click', tryLock);
-
-  controls.addEventListener('lock', () => {
-    overlay.style.display = 'none';
-  });
-
-  controls.addEventListener('unlock', () => {
-    overlay.style.display = 'flex';
-  });
-
-  const keys = {};
-  document.addEventListener('keydown', (e) => {
-    keys[e.code] = true;
-  });
-  document.addEventListener('keyup', (e) => {
-    keys[e.code] = false;
-  });
-
-  // ── Animate ─────────────────────────────────────────────────────────────────
-  const _moveDir = new THREE.Vector3();
-  let prev = performance.now();
-
-  function animate() {
-    requestAnimationFrame(animate);
-
-    const now = performance.now();
-    const delta = Math.min((now - prev) / 1000, 0.1);
-    prev = now;
-
-    if (controls.isLocked) {
-      const speed = (keys['ShiftLeft'] || keys['ShiftRight']) ? 10 : 5;
-
-      _moveDir.set(0, 0, 0);
-
-      if (keys['KeyW'] || keys['ArrowUp'])    _moveDir.z -= 1;
-      if (keys['KeyS'] || keys['ArrowDown'])  _moveDir.z += 1;
-      if (keys['KeyA'] || keys['ArrowLeft'])  _moveDir.x -= 1;
-      if (keys['KeyD'] || keys['ArrowRight']) _moveDir.x += 1;
-
-      if (_moveDir.lengthSq() > 0) {
-        _moveDir.normalize();
-        controls.moveForward(-_moveDir.z * speed * delta);
-        controls.moveRight(_moveDir.x * speed * delta);
+        await Promise.all(jobs);
       }
 
-      camera.position.y = 1.7;
-    }
+      loadAllModels();
 
-    renderer.render(scene, camera);
+      // ── Controls ────────────────────────────────────────────────────────────────
+      const controls = new PointerLockControls(camera, renderer.domElement);
+      scene.add(controls.getObject());
+
+      camera.position.set(START_POINT.x, 1.7, START_POINT.z);
+      camera.lookAt(0, 1.7, 0);
+
+      function tryLock() {
+        controls.lock();
+      }
+
+      overlay.addEventListener('click', tryLock);
+      renderer.domElement.addEventListener('click', tryLock);
+      document.body.addEventListener('click', tryLock);
+
+      controls.addEventListener('lock', () => {
+        overlay.style.display = 'none';
+      });
+
+      controls.addEventListener('unlock', () => {
+        overlay.style.display = 'flex';
+      });
+      const PLAYER_HEIGHT = 1.7;
+      const JUMP_VELOCITY = 8;
+      const GRAVITY = 20;
+
+      let verticalVelocity = 0;
+      let isOnGround = true;
+    const keys = {};
+document.addEventListener('keydown', (e) => {
+  keys[e.code] = true;
+
+  if (e.code === 'Space') {
+    e.preventDefault();
+
+    if (controls.isLocked && isOnGround) {
+      verticalVelocity = JUMP_VELOCITY;
+      isOnGround = false;
+    }
+  }
+});
+
+document.addEventListener('keyup', (e) => {
+  keys[e.code] = false;
+});
+
+      // ── Animate ─────────────────────────────────────────────────────────────────
+      const _moveDir = new THREE.Vector3();
+      let prev = performance.now();
+
+      function animate() {
+        requestAnimationFrame(animate);
+
+        const now = performance.now();
+        const delta = Math.min((now - prev) / 1000, 0.1);
+        prev = now;
+
+        if (controls.isLocked) {
+  const speed = (keys['ShiftLeft'] || keys['ShiftRight']) ? 10 : 5;
+
+  _moveDir.set(0, 0, 0);
+
+  if (keys['KeyW'] || keys['ArrowUp']) _moveDir.z -= 1;
+  if (keys['KeyS'] || keys['ArrowDown']) _moveDir.z += 1;
+  if (keys['KeyA'] || keys['ArrowLeft']) _moveDir.x -= 1;
+  if (keys['KeyD'] || keys['ArrowRight']) _moveDir.x += 1;
+
+  if (_moveDir.lengthSq() > 0) {
+    _moveDir.normalize();
+    controls.moveForward(-_moveDir.z * speed * delta);
+    controls.moveRight(_moveDir.x * speed * delta);
   }
 
-  animate();
+  verticalVelocity -= GRAVITY * delta;
+  camera.position.y += verticalVelocity * delta;
 
-  setInterval(() => {
-    console.log(
-      'Triangles:', renderer.info.render.triangles,
-      'Draw calls:', renderer.info.render.calls
-    );
-  }, 1000);
-
-  window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-  });
-
-} catch (err) {
-  showError(err);
+  if (camera.position.y <= PLAYER_HEIGHT) {
+    camera.position.y = PLAYER_HEIGHT;
+    verticalVelocity = 0;
+    isOnGround = true;
+  }
 }
-</script>
+
+        renderer.render(scene, camera);
+      }
+
+      animate();
+
+      setInterval(() => {
+        console.log(
+          'Triangles:', renderer.info.render.triangles,
+          'Draw calls:', renderer.info.render.calls
+        );
+      }, 1000);
+
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+
+    } catch (err) {
+      showError(err);
+    }
+  </script>
 </body>
+
 </html>
