@@ -4,127 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>TV Placement World</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      overflow: hidden;
-      background: #000;
-      font-family: monospace;
-    }
-
-    #crosshair {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-      z-index: 10;
-    }
-
-    #crosshair::before,
-    #crosshair::after {
-      content: '';
-      position: absolute;
-      background: rgba(255, 255, 255, 0.9);
-    }
-
-    #crosshair::before {
-      width: 2px;
-      height: 20px;
-      left: 9px;
-      top: 0;
-    }
-
-    #crosshair::after {
-      width: 20px;
-      height: 2px;
-      top: 9px;
-      left: 0;
-    }
-
-    #overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.55);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
-      font: 14px/2 monospace;
-      cursor: pointer;
-      z-index: 20;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      text-align: center;
-    }
-
-    #overlay h1 {
-      font-size: 24px;
-      margin-bottom: 8px;
-    }
-
-    #overlay p {
-      font-size: 11px;
-      color: #ccc;
-    }
-
-    #hint {
-      position: fixed;
-      bottom: 16px;
-      left: 50%;
-      transform: translateX(-50%);
-      color: rgba(255, 255, 255, 0.65);
-      font: 11px monospace;
-      letter-spacing: 2px;
-      pointer-events: none;
-      z-index: 10;
-      text-align: center;
-    }
-
-    #panel {
-      position: fixed;
-      top: 12px;
-      left: 12px;
-      z-index: 30;
-      background: rgba(0, 0, 0, 0.65);
-      color: #fff;
-      padding: 10px 12px;
-      font: 12px/1.5 monospace;
-      white-space: pre-wrap;
-      max-width: 470px;
-    }
-
-    #error {
-      position: fixed;
-      top: 12px;
-      right: 12px;
-      z-index: 40;
-      background: rgba(120, 0, 0, 0.92);
-      color: #fff;
-      padding: 10px 12px;
-      font: 12px/1.5 monospace;
-      white-space: pre-wrap;
-      max-width: 520px;
-      display: none;
-    }
-
-    #legend {
-      position: fixed;
-      right: 12px;
-      bottom: 12px;
-      z-index: 15;
-      background: rgba(0, 0, 0, 0.55);
-      color: #fff;
-      padding: 10px 12px;
-      font: 12px/1.5 monospace;
-    }
-  </style>
+  <link rel="stylesheet" href="../css/bfa.css">
 </head>
 
 <body>
@@ -257,6 +137,35 @@
         { model: 'ico_tree3', x: -61, y: 0, z: -15, ry: THREE.MathUtils.degToRad(144), scale: 2.0 },
         { model: 'ico_tree', x: -75, y: 0, z: -15, ry: THREE.MathUtils.degToRad(216), scale: 2.0 },
         { model: 'ico_tree2', x: -79, y: 0, z: -28, ry: THREE.MathUtils.degToRad(288), scale: 2.0 },
+
+        //  wood_crt
+        { model: 'pine_tree', x: 0, y: 0, z: -80, ry: THREE.MathUtils.degToRad(0), scale: 2.0 },
+        { model: 'pine_tree2', x: 11, y: 0, z: -72, ry: THREE.MathUtils.degToRad(72), scale: 2.0 },
+        { model: 'pine_tree3', x: 7, y: 0, z: -59, ry: THREE.MathUtils.degToRad(144), scale: 2.0 },
+        { model: 'pine_tree', x: -7, y: 0, z: -59, ry: THREE.MathUtils.degToRad(216), scale: 2.0 },
+        { model: 'pine_tree4', x: -11, y: 0, z: -72, ry: THREE.MathUtils.degToRad(288), scale: 2.0 },
+
+        //  plastic_crt
+        { model: 'pine_tree_yellow', x: 68, y: 0, z: -36, ry: THREE.MathUtils.degToRad(0), scale: 2.0 },
+        { model: 'pine_tree_yellow2', x: 79, y: 0, z: -28, ry: THREE.MathUtils.degToRad(72), scale: 2.0 },
+        { model: 'pine_tree_yellow', x: 75, y: 0, z: -15, ry: THREE.MathUtils.degToRad(144), scale: 2.0 },
+        { model: 'pine_tree_yellow3', x: 61, y: 0, z: -15, ry: THREE.MathUtils.degToRad(216), scale: 2.0 },
+        { model: 'pine_tree_yellow4', x: 57, y: 0, z: -28, ry: THREE.MathUtils.degToRad(288), scale: 2.0 },
+
+        //  old_crt_grey
+        { model: 'ico_tree_yellow', x: 42, y: 0, z: 32, ry: THREE.MathUtils.degToRad(0), scale: 2.0 },
+        { model: 'ico_tree_yellow2', x: 53, y: 0, z: 40, ry: THREE.MathUtils.degToRad(72), scale: 2.0 },
+        { model: 'ico_tree_yellow3', x: 49, y: 0, z: 53, ry: THREE.MathUtils.degToRad(144), scale: 2.0 },
+        { model: 'ico_tree_yellow', x: 35, y: 0, z: 53, ry: THREE.MathUtils.degToRad(216), scale: 2.0 },
+        { model: 'ico_tree_yellow2', x: 31, y: 0, z: 40, ry: THREE.MathUtils.degToRad(288), scale: 2.0 },
+
+        //  oled_silver
+        { model: 'pine_tree_orange', x: -42, y: 0, z: 32, ry: THREE.MathUtils.degToRad(0), scale: 2.0 },
+        { model: 'pine_tree_orange2', x: -31, y: 0, z: 40, ry: THREE.MathUtils.degToRad(72), scale: 2.0 },
+        { model: 'pine_tree_orange3', x: -35, y: 0, z: 53, ry: THREE.MathUtils.degToRad(144), scale: 2.0 },
+        { model: 'pine_tree_orange', x: -49, y: 0, z: 53, ry: THREE.MathUtils.degToRad(216), scale: 2.0 },
+        { model: 'pine_tree_orange4', x: -53, y: 0, z: 40, ry: THREE.MathUtils.degToRad(288), scale: 2.0 },
+
       ];
       // ── Placement markers / labels ─────────────────────────────────────────────
       function addPlacementMarkers() {
@@ -357,6 +266,25 @@
         ico_tree: 'ico_tree.glb',
         ico_tree2: 'ico_tree2.glb',
         ico_tree3: 'ico_tree3.glb',
+
+        pine_tree: 'pine_tree.glb',
+        pine_tree2: 'pine_tree2.glb',
+        pine_tree3: 'pine_tree3.glb',
+        pine_tree4: 'pine_tree4.glb',
+
+        pine_tree_yellow: 'pine_tree_yellow.glb',
+        pine_tree_yellow2: 'pine_tree_yellow2.glb',
+        pine_tree_yellow3: 'pine_tree_yellow3.glb',
+        pine_tree_yellow4: 'pine_tree_yellow4.glb',
+
+        ico_tree_yellow: 'ico_tree_yellow.glb',
+        ico_tree_yellow2: 'ico_tree_yellow2.glb',
+        ico_tree_yellow3: 'ico_tree_yellow3.glb',
+
+        pine_tree_orange: 'pine_tree_orange.glb',
+        pine_tree_orange2: 'pine_tree_orange2.glb',
+        pine_tree_orange3: 'pine_tree_orange3.glb',
+        pine_tree_orange4: 'pine_tree_orange4.glb',
       };
 
       const treeModels = {};
@@ -544,23 +472,23 @@ Loaded models:
 
       let verticalVelocity = 0;
       let isOnGround = true;
-    const keys = {};
-document.addEventListener('keydown', (e) => {
-  keys[e.code] = true;
+      const keys = {};
+      document.addEventListener('keydown', (e) => {
+        keys[e.code] = true;
 
-  if (e.code === 'Space') {
-    e.preventDefault();
+        if (e.code === 'Space') {
+          e.preventDefault();
 
-    if (controls.isLocked && isOnGround) {
-      verticalVelocity = JUMP_VELOCITY;
-      isOnGround = false;
-    }
-  }
-});
+          if (controls.isLocked && isOnGround) {
+            verticalVelocity = JUMP_VELOCITY;
+            isOnGround = false;
+          }
+        }
+      });
 
-document.addEventListener('keyup', (e) => {
-  keys[e.code] = false;
-});
+      document.addEventListener('keyup', (e) => {
+        keys[e.code] = false;
+      });
 
       // ── Animate ─────────────────────────────────────────────────────────────────
       const _moveDir = new THREE.Vector3();
@@ -574,30 +502,30 @@ document.addEventListener('keyup', (e) => {
         prev = now;
 
         if (controls.isLocked) {
-  const speed = (keys['ShiftLeft'] || keys['ShiftRight']) ? 10 : 5;
+          const speed = (keys['ShiftLeft'] || keys['ShiftRight']) ? 10 : 5;
 
-  _moveDir.set(0, 0, 0);
+          _moveDir.set(0, 0, 0);
 
-  if (keys['KeyW'] || keys['ArrowUp']) _moveDir.z -= 1;
-  if (keys['KeyS'] || keys['ArrowDown']) _moveDir.z += 1;
-  if (keys['KeyA'] || keys['ArrowLeft']) _moveDir.x -= 1;
-  if (keys['KeyD'] || keys['ArrowRight']) _moveDir.x += 1;
+          if (keys['KeyW'] || keys['ArrowUp']) _moveDir.z -= 1;
+          if (keys['KeyS'] || keys['ArrowDown']) _moveDir.z += 1;
+          if (keys['KeyA'] || keys['ArrowLeft']) _moveDir.x -= 1;
+          if (keys['KeyD'] || keys['ArrowRight']) _moveDir.x += 1;
 
-  if (_moveDir.lengthSq() > 0) {
-    _moveDir.normalize();
-    controls.moveForward(-_moveDir.z * speed * delta);
-    controls.moveRight(_moveDir.x * speed * delta);
-  }
+          if (_moveDir.lengthSq() > 0) {
+            _moveDir.normalize();
+            controls.moveForward(-_moveDir.z * speed * delta);
+            controls.moveRight(_moveDir.x * speed * delta);
+          }
 
-  verticalVelocity -= GRAVITY * delta;
-  camera.position.y += verticalVelocity * delta;
+          verticalVelocity -= GRAVITY * delta;
+          camera.position.y += verticalVelocity * delta;
 
-  if (camera.position.y <= PLAYER_HEIGHT) {
-    camera.position.y = PLAYER_HEIGHT;
-    verticalVelocity = 0;
-    isOnGround = true;
-  }
-}
+          if (camera.position.y <= PLAYER_HEIGHT) {
+            camera.position.y = PLAYER_HEIGHT;
+            verticalVelocity = 0;
+            isOnGround = true;
+          }
+        }
 
         renderer.render(scene, camera);
       }
