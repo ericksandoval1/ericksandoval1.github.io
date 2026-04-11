@@ -183,7 +183,7 @@
       const oled_black = {
         tvs: [
           { model: 'oled_black', x: -48, y: 0, z: -16, ry: THREE.MathUtils.degToRad(250), scale: 3.0 }, // center
-          { model: 'oled_black', x: -60, y: 0, z: -25, ry: THREE.MathUtils.degToRad(160), scale: 3.0 }, // outer
+          { model: 'oled_black', x: -52, y: 0, z: -25, ry: THREE.MathUtils.degToRad(200), scale: 3.0 }, // outer
           { model: 'oled_black', x: -63, y: 0, z: -15, ry: THREE.MathUtils.degToRad(265), scale: 3.0 }, // outer
         ],
         trees: [
@@ -202,39 +202,48 @@
         oled_silver,
         oled_black,
       ];
+
       const PATH_TREES = [
-        // oled_black -> oled_silver
-        { model: 'ico_tree', x: -53, y: 0, z: 8, ry: THREE.MathUtils.degToRad(18), scale: 1.9 },
-        { model: 'ico_tree2', x: -46, y: 0, z: 20, ry: THREE.MathUtils.degToRad(42), scale: 1.9 },
-        { model: 'ico_tree3', x: -58, y: 0, z: 30, ry: THREE.MathUtils.degToRad(70), scale: 1.9 },
-        { model: 'pine_tree', x: -48, y: 0, z: 42, ry: THREE.MathUtils.degToRad(96), scale: 2.0 },
-        { model: 'ico_tree2', x: -63, y: 0, z: 52, ry: THREE.MathUtils.degToRad(118), scale: 1.9 },
-        { model: 'pine_tree2', x: -51, y: 0, z: 64, ry: THREE.MathUtils.degToRad(136), scale: 2.0 },
+  // oled_black -> oled_silver
+  { model: 'ico_tree',  x: -66, y: 0,   z: 4,  ry: THREE.MathUtils.degToRad(22),  scale: 1.9 },
+  { model: 'ico_tree2', x: -40, y: 0,   z: 10, ry: THREE.MathUtils.degToRad(38),  scale: 1.9 },
+  { model: 'ico_tree3', x: -69, y: 0,   z: 22, ry: THREE.MathUtils.degToRad(56),  scale: 1.9 },
+  { model: 'ico_tree',  x: -39, y: 0,   z: 28, ry: THREE.MathUtils.degToRad(74),  scale: 1.9 },
+  { model: 'ico_tree2', x: -67, y: 0,   z: 40, ry: THREE.MathUtils.degToRad(92),  scale: 1.9 },
+  { model: 'pine_tree', x: -40, y: 0,   z: 46, ry: THREE.MathUtils.degToRad(108), scale: 2.0 },
+  { model: 'ico_tree3', x: -64, y: 0,   z: 58, ry: THREE.MathUtils.degToRad(122), scale: 1.9 },
+  { model: 'pine_tree2',x: -39, y: 0,   z: 66, ry: THREE.MathUtils.degToRad(138), scale: 2.0 },
 
-        // oled_silver -> old_crt_grey
-        { model: 'pine_tree3', x: -31, y: 0, z: 93, ry: THREE.MathUtils.degToRad(82), scale: 2.0 },
-        { model: 'pine_tree', x: -7, y: 0, z: 88, ry: THREE.MathUtils.degToRad(66), scale: 2.0 },
-        { model: 'pine_tree4', x: 13, y: 0, z: 84, ry: THREE.MathUtils.degToRad(54), scale: 2.0 },
-        { model: 'ico_tree_yellow', x: 31, y: -0.5, z: 81, ry: THREE.MathUtils.degToRad(40), scale: 2.0 },
-        { model: 'pine_tree2', x: 46, y: 0, z: 76, ry: THREE.MathUtils.degToRad(28), scale: 2.0 },
-        { model: 'ico_tree_yellow2', x: 57, y: -2, z: 69, ry: THREE.MathUtils.degToRad(18), scale: 2.0 },
+  // oled_silver -> old_crt_grey
+  { model: 'pine_tree3',      x: -28, y: 0,    z: 104, ry: THREE.MathUtils.degToRad(80),  scale: 2.0 },
+  { model: 'pine_tree',       x: -18, y: 0,    z: 74,  ry: THREE.MathUtils.degToRad(70),  scale: 2.0 },
+  { model: 'pine_tree4',      x: 0,   y: 0,    z: 103, ry: THREE.MathUtils.degToRad(62),  scale: 2.0 },
+  { model: 'pine_tree2',      x: 10,  y: 0,    z: 74,  ry: THREE.MathUtils.degToRad(54),  scale: 2.0 },
+  { model: 'ico_tree_yellow', x: 27,  y: -0.5, z: 98,  ry: THREE.MathUtils.degToRad(44),  scale: 2.0 },
+  { model: 'pine_tree',       x: 35,  y: 0,    z: 72,  ry: THREE.MathUtils.degToRad(34),  scale: 2.0 },
+  { model: 'ico_tree_yellow2',x: 53,  y: -2,   z: 90,  ry: THREE.MathUtils.degToRad(26),  scale: 2.0 },
+  { model: 'ico_tree_yellow', x: 60,  y: -0.5, z: 68,  ry: THREE.MathUtils.degToRad(18),  scale: 2.0 },
 
-        // old_crt_grey -> plastic_crt
-        { model: 'ico_tree_yellow3', x: 80, y: -2, z: 45, ry: THREE.MathUtils.degToRad(144), scale: 2.0 },
-        { model: 'ico_tree_yellow', x: 88, y: -0.5, z: 28, ry: THREE.MathUtils.degToRad(128), scale: 2.0 },
-        { model: 'pine_tree_yellow', x: 93, y: 0, z: 14, ry: THREE.MathUtils.degToRad(112), scale: 2.0 },
-        { model: 'ico_tree_yellow2', x: 104, y: -2, z: 2, ry: THREE.MathUtils.degToRad(98), scale: 2.0 },
-        { model: 'pine_tree_yellow2', x: 95, y: 0, z: -10, ry: THREE.MathUtils.degToRad(82), scale: 2.0 },
-        { model: 'pine_tree_yellow3', x: 104, y: 0, z: -23, ry: THREE.MathUtils.degToRad(68), scale: 2.0 },
+  // old_crt_grey -> plastic_crt
+  { model: 'ico_tree_yellow3', x: 84,  y: -2,   z: 54,  ry: THREE.MathUtils.degToRad(144), scale: 2.0 },
+  { model: 'ico_tree_yellow',  x: 58,  y: -0.5, z: 46,  ry: THREE.MathUtils.degToRad(134), scale: 2.0 },
+  { model: 'ico_tree_yellow2', x: 92,  y: -2,   z: 32,  ry: THREE.MathUtils.degToRad(122), scale: 2.0 },
+  { model: 'pine_tree_yellow', x: 66,  y: 0,    z: 24,  ry: THREE.MathUtils.degToRad(112), scale: 2.0 },
+  { model: 'ico_tree_yellow',  x: 100, y: -0.5, z: 10,  ry: THREE.MathUtils.degToRad(100), scale: 2.0 },
+  { model: 'pine_tree_yellow2',x: 74,  y: 0,    z: 0,   ry: THREE.MathUtils.degToRad(88),  scale: 2.0 },
+  { model: 'pine_tree_yellow3',x: 104, y: 0,    z: -12, ry: THREE.MathUtils.degToRad(76),  scale: 2.0 },
+  { model: 'pine_tree_yellow', x: 79,  y: 0,    z: -22, ry: THREE.MathUtils.degToRad(68),  scale: 2.0 },
 
-        // plastic_crt -> wood_crt
-        { model: 'pine_tree_yellow4', x: 76, y: 0, z: -60, ry: THREE.MathUtils.degToRad(210), scale: 2.0 },
-        { model: 'pine_tree_yellow', x: 59, y: 0, z: -74, ry: THREE.MathUtils.degToRad(198), scale: 2.0 },
-        { model: 'dead_tree', x: 42, y: -0.1, z: -85, ry: THREE.MathUtils.degToRad(188), scale: 2.0 },
-        { model: 'pine_tree_yellow2', x: 27, y: 0, z: -95, ry: THREE.MathUtils.degToRad(182), scale: 2.0 },
-        { model: 'dead_tree3', x: 14, y: -1.25, z: -104, ry: THREE.MathUtils.degToRad(176), scale: 2.0 },
-        { model: 'dead_tree5', x: -2, y: -0.5, z: -112, ry: THREE.MathUtils.degToRad(172), scale: 2.0 },
-      ];
+  // plastic_crt -> wood_crt
+  { model: 'pine_tree_yellow4', x: 72, y: 0,     z: -70,  ry: THREE.MathUtils.degToRad(210), scale: 2.0 },
+  { model: 'pine_tree_yellow',  x: 56, y: 0,     z: -52,  ry: THREE.MathUtils.degToRad(202), scale: 2.0 },
+  { model: 'pine_tree_yellow2', x: 48, y: 0,     z: -84,  ry: THREE.MathUtils.degToRad(194), scale: 2.0 },
+  { model: 'dead_tree',         x: 30, y: -0.1,  z: -66,  ry: THREE.MathUtils.degToRad(188), scale: 2.0 },
+  { model: 'pine_tree_yellow3', x: 20, y: 0,     z: -97,  ry: THREE.MathUtils.degToRad(182), scale: 2.0 },
+  { model: 'dead_tree3',        x: 3,  y: -1.25, z: -79,  ry: THREE.MathUtils.degToRad(176), scale: 2.0 },
+  { model: 'dead_tree5',        x: -8, y: -0.5,  z: -110, ry: THREE.MathUtils.degToRad(172), scale: 2.0 },
+  { model: 'dead_tree2',        x: -18,y: -1.5,  z: -95,  ry: THREE.MathUtils.degToRad(168), scale: 2.0 },
+];
 
       // ── Collision data ──────────────────────────────────────────────────────────
       const colliders = [];
@@ -592,14 +601,12 @@ and drops its bottom to Y=0 at the marker.`
             });
         });
 
-        await Promise.all(jobs);
-        addModelPlacements();
+await Promise.all(jobs);
+addModelPlacements();
 
-        await loadTreeModels();
-        addTreePlacements();
-
-        addTreePlacements();
-        addPathTreePlacements();
+await loadTreeModels();
+addTreePlacements();
+addPathTreePlacements();
 
         setPanel(
           `Ready
