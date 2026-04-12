@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <title>TV Placement World</title>
+  <title>Memory Grove</title>
   <link rel="stylesheet" href="../css/bfa.css">
   <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 </head>
@@ -12,7 +12,7 @@
   <div id="crosshair"></div>
 
   <div id="overlay">
-    <h1>TV Placement World</h1>
+    <h1>Memory Grove</h1>
     <p>Click anywhere to enter</p>
     <p>ESC to release</p>
   </div>
@@ -73,19 +73,23 @@
 
       // ── Scene ───────────────────────────────────────────────────────────────────
       const scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x87ceeb);
-      scene.fog = new THREE.Fog(0x87ceeb, 50, 150);
 
       // ── Camera ──────────────────────────────────────────────────────────────────
       const camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerHeight, 0.1, 500);
 
       // ── Lights ──────────────────────────────────────────────────────────────────
-      scene.add(new THREE.AmbientLight(0xffffff, 0.9));
-      const sun = new THREE.DirectionalLight(0xfff4d0, 1.1);
-      sun.position.set(40, 80, 20);
-      scene.add(sun);
-      scene.add(new THREE.HemisphereLight(0x87ceeb, 0x3d6b30, 0.5));
+      scene.background = new THREE.Color(0xf0f7ff);
+      scene.fog = new THREE.Fog(0xffefe6, 40, 160);
 
+      const ambient = new THREE.AmbientLight(0xffe3b0, 0.35);
+      scene.add(ambient);
+
+      const sun = new THREE.DirectionalLight(0xff944d, 1.2);
+      sun.position.set(30, 35, 12);
+      scene.add(sun);
+
+      const hemi = new THREE.HemisphereLight(0xffc58a, 0x2b1d16, 0.45);
+      scene.add(hemi);
       // ── Ground ──────────────────────────────────────────────────────────────────
       const ground = new THREE.Mesh(
         new THREE.PlaneGeometry(800, 800),
@@ -190,10 +194,10 @@
       // ── Collision data ──────────────────────────────────────────────────────────
       const colliders = [];
       const treeTrunkColliders = [];
-      const PLAYER_RADIUS = 0.6;
+      const PLAYER_RADIUS = 0.5;
       const PLAYER_HEIGHT = 1.7;
-      const JUMP_VELOCITY = 8;
-      const GRAVITY = 25;
+      const JUMP_VELOCITY = 10;
+      const GRAVITY = 30;
 
       function addColliderFromObject(object3D, expand = 0) {
         object3D.updateMatrixWorld(true);
@@ -379,9 +383,9 @@
             ring.position.set(x, y + 0.03, z);
             scene.add(ring);
 
-            const label = makeTextSprite(`${groupIndex}.${tvIndex}: ${entry.model} (${x}, ${y}, ${z})`, { fontSize: 26, padding: 10 });
-            label.position.set(x, y + 3.0, z);
-            scene.add(label);
+            // const label = makeTextSprite(`${groupIndex}.${tvIndex}: ${entry.model} (${x}, ${y}, ${z})`, { fontSize: 26, padding: 10 });
+            // label.position.set(x, y + 3.0, z);
+            // scene.add(label);
           });
         });
       }
