@@ -41,9 +41,7 @@
     const errorBox = document.getElementById('error');
     const overlay = document.getElementById('overlay');
 
-    function setPanel(text) {
-      panel.textContent = text;
-    }
+    function setPanel(text) { panel.textContent = text; }
 
     function showError(err) {
       console.error(err);
@@ -75,22 +73,16 @@
       // ── Scene ───────────────────────────────────────────────────────────────────
       const scene = new THREE.Scene();
       scene.background = new THREE.Color(0x87ceeb);
-      scene.fog = new THREE.Fog(0x87ceeb, 70, 82);
+      scene.fog = new THREE.Fog(0x87ceeb, 120, 182);
+
       // ── Camera ──────────────────────────────────────────────────────────────────
-      const camera = new THREE.PerspectiveCamera(
-        72,
-        window.innerWidth / window.innerHeight,
-        0.1,
-        500
-      );
+      const camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerHeight, 0.1, 500);
 
       // ── Lights ──────────────────────────────────────────────────────────────────
       scene.add(new THREE.AmbientLight(0xffffff, 0.9));
-
       const sun = new THREE.DirectionalLight(0xfff4d0, 1.1);
       sun.position.set(40, 80, 20);
       scene.add(sun);
-
       scene.add(new THREE.HemisphereLight(0x87ceeb, 0x3d6b30, 0.5));
 
       // ── Ground ──────────────────────────────────────────────────────────────────
@@ -105,9 +97,7 @@
       const grid = new THREE.GridHelper(800, 80, 0xffffff, 0x888888);
       grid.position.y = 0.02;
       scene.add(grid);
-
-      const axes = new THREE.AxesHelper(20);
-      scene.add(axes);
+      scene.add(new THREE.AxesHelper(20));
 
       const spawnMarker = new THREE.Mesh(
         new THREE.CylinderGeometry(0.6, 0.6, 0.2, 24),
@@ -121,128 +111,80 @@
 
       const wood_crt = {
         tvs: [
-          { model: 'wood_crt', x: 0, y: 0, z: -117, ry: THREE.MathUtils.degToRad(130), scale: 3.0 }, // center
-          { model: 'wood_crt', x: 16, y: 0, z: -123, ry: THREE.MathUtils.degToRad(160), scale: 3.0 }, // outer, faces center
-          { model: 'wood_crt', x: -10, y: 0, z: -103, ry: THREE.MathUtils.degToRad(310), scale: 3.0 }, // outer, faces center
+          { model: 'wood_crt', x: 211, y: 0, z: 205, ry: THREE.MathUtils.degToRad(176), scale: 3.0 },
+          { model: 'wood_crt', x: 236, y: 0, z: 214, ry: THREE.MathUtils.degToRad(160), scale: 3.0 },
+          { model: 'wood_crt', x: 221, y: 0, z: 237, ry: THREE.MathUtils.degToRad(24), scale: 3.0 },
         ],
         trees: [
-          { model: 'dead_tree', x: 0, y: -0.1, z: -135, ry: THREE.MathUtils.degToRad(0), scale: 2.0 },
-          { model: 'dead_tree2', x: 16, y: -1.5, z: -123, ry: THREE.MathUtils.degToRad(72), scale: 2.0 },
-          { model: 'dead_tree3', x: 10, y: -1.25, z: -103, ry: THREE.MathUtils.degToRad(144), scale: 2.0 },
-          { model: 'dead_tree4', x: -10, y: -0.1, z: -103, ry: THREE.MathUtils.degToRad(216), scale: 2.0 },
-          { model: 'dead_tree5', x: -16, y: -0.5, z: -123, ry: THREE.MathUtils.degToRad(288), scale: 2.0 },
+          { model: 'dead_tree', x: 220, y: -0.1, z: 202, ry: THREE.MathUtils.degToRad(0), scale: 2.0 },
+          { model: 'dead_tree2', x: 236, y: -1.5, z: 214, ry: THREE.MathUtils.degToRad(72), scale: 2.0 },
+          { model: 'dead_tree3', x: 230, y: -1.25, z: 234, ry: THREE.MathUtils.degToRad(144), scale: 2.0 },
+          { model: 'dead_tree4', x: 210, y: -0.1, z: 234, ry: THREE.MathUtils.degToRad(216), scale: 2.0 },
+          { model: 'dead_tree5', x: 204, y: -0.5, z: 214, ry: THREE.MathUtils.degToRad(288), scale: 2.0 },
         ]
       };
 
       const plastic_crt = {
         tvs: [
-          { model: 'plastic_crt', x: 95, y: 0, z: -38, ry: THREE.MathUtils.degToRad(190), scale: 3.0 }, // center
-          { model: 'plastic_crt', x: 111, y: 0, z: -44, ry: THREE.MathUtils.degToRad(160), scale: 3.0 }, // outer
-          { model: 'plastic_crt', x: 85, y: 0, z: -24, ry: THREE.MathUtils.degToRad(310), scale: 3.0 }, // outer
+          { model: 'plastic_crt', x: 50, y: 0, z: 270, ry: THREE.MathUtils.degToRad(102), scale: 3.0 },
+          { model: 'plastic_crt', x: 60, y: 0, z: 250, ry: THREE.MathUtils.degToRad(158), scale: 3.0 },
+          { model: 'plastic_crt', x: 49, y: 0, z: 288, ry: THREE.MathUtils.degToRad(10), scale: 3.0 },
         ],
         trees: [
-          { model: 'pine_tree_yellow', x: 95, y: 0, z: -56, ry: THREE.MathUtils.degToRad(0), scale: 2.0 },
-          { model: 'pine_tree_yellow2', x: 111, y: 0, z: -44, ry: THREE.MathUtils.degToRad(72), scale: 2.0 },
-          { model: 'pine_tree_yellow', x: 105, y: 0, z: -24, ry: THREE.MathUtils.degToRad(144), scale: 2.0 },
-          { model: 'pine_tree_yellow3', x: 85, y: 0, z: -24, ry: THREE.MathUtils.degToRad(216), scale: 2.0 },
-          { model: 'pine_tree_yellow4', x: 79, y: 0, z: -44, ry: THREE.MathUtils.degToRad(288), scale: 2.0 },
+          { model: 'pine_tree_yellow', x: 50, y: 0, z: 252, ry: THREE.MathUtils.degToRad(0), scale: 1.7 },
+          { model: 'pine_tree_yellow2', x: 66, y: 0, z: 264, ry: THREE.MathUtils.degToRad(72), scale: 1.7 },
+          { model: 'pine_tree_yellow', x: 60, y: 0, z: 284, ry: THREE.MathUtils.degToRad(144), scale: 1.7 },
+          { model: 'pine_tree_yellow3', x: 40, y: 0, z: 284, ry: THREE.MathUtils.degToRad(216), scale: 1.7 },
+          { model: 'pine_tree_yellow4', x: 34, y: 0, z: 264, ry: THREE.MathUtils.degToRad(288), scale: 1.7 },
         ]
       };
 
       const old_crt_grey = {
         tvs: [
-          { model: 'old_crt_grey', x: 66, y: 0, z: 62, ry: THREE.MathUtils.degToRad(120), scale: 3.0 }, // center
-          { model: 'old_crt_grey', x: 77, y: 0, z: 58, ry: THREE.MathUtils.degToRad(30), scale: 3.0 }, // outer
-          { model: 'old_crt_grey', x: 55, y: 0, z: 60, ry: THREE.MathUtils.degToRad(300), scale: 3.0 }, // outer
+          { model: 'old_crt_grey', x: -118, y: 0, z: 246, ry: THREE.MathUtils.degToRad(290), scale: 3.0 },
+          { model: 'old_crt_grey', x: -98, y: 0, z: 250, ry: THREE.MathUtils.degToRad(30), scale: 3.0 },
+          { model: 'old_crt_grey', x: -94, y: 0, z: 231, ry: THREE.MathUtils.degToRad(130), scale: 3.0 },
         ],
         trees: [
-          { model: 'ico_tree_yellow', x: 66, y: -0.5, z: 50, ry: THREE.MathUtils.degToRad(0), scale: 2.0 },
-          { model: 'ico_tree_yellow2', x: 77, y: -2, z: 58, ry: THREE.MathUtils.degToRad(72), scale: 2.0 },
-          { model: 'ico_tree_yellow3', x: 73, y: -2, z: 71, ry: THREE.MathUtils.degToRad(144), scale: 2.0 },
-          { model: 'ico_tree_yellow', x: 59, y: -2, z: 71, ry: THREE.MathUtils.degToRad(216), scale: 2.0 },
-          { model: 'ico_tree_yellow2', x: 55, y: -2, z: 58, ry: THREE.MathUtils.degToRad(288), scale: 2.0 },
+          { model: 'ico_tree_yellow', x: -110, y: -0.5, z: 233, ry: THREE.MathUtils.degToRad(0), scale: 1.5 },
+          { model: 'ico_tree_yellow2', x: -99, y: -2, z: 241, ry: THREE.MathUtils.degToRad(72), scale: 1.5 },
+          { model: 'ico_tree_yellow3', x: -103, y: -2, z: 254, ry: THREE.MathUtils.degToRad(144), scale: 1.5 },
+          { model: 'ico_tree_yellow', x: -117, y: -2, z: 254, ry: THREE.MathUtils.degToRad(216), scale: 1.5 },
+          { model: 'ico_tree_yellow2', x: -121, y: -2, z: 241, ry: THREE.MathUtils.degToRad(288), scale: 1.5 },
         ]
       };
 
       const oled_silver = {
         tvs: [
-          { model: 'oled_silver', x: -60, y: 0, z: 88, ry: THREE.MathUtils.degToRad(360), scale: 3.0 }, // center
-          { model: 'oled_silver', x: -40, y: 0, z: 90, ry: THREE.MathUtils.degToRad(110), scale: 3.0 }, // outer
-          { model: 'oled_silver', x: -62, y: 0, z: 102, ry: THREE.MathUtils.degToRad(315), scale: 3.0 }, // outer
+          { model: 'oled_silver', x: -168, y: 0, z: 137, ry: THREE.MathUtils.degToRad(316), scale: 3.0 },
+          { model: 'oled_silver', x: -142, y: 0, z: 117, ry: THREE.MathUtils.degToRad(110), scale: 3.0 },
+          { model: 'oled_silver', x: -172, y: 0, z: 103, ry: THREE.MathUtils.degToRad(232), scale: 3.0 },
         ],
         trees: [
-          { model: 'pine_tree', x: -60, y: 0, z: 70, ry: THREE.MathUtils.degToRad(0), scale: 2.0 },
-          { model: 'pine_tree2', x: -44, y: 0, z: 82, ry: THREE.MathUtils.degToRad(72), scale: 2.0 },
-          { model: 'pine_tree3', x: -50, y: 0, z: 102, ry: THREE.MathUtils.degToRad(144), scale: 2.0 },
-          { model: 'pine_tree', x: -70, y: 0, z: 102, ry: THREE.MathUtils.degToRad(216), scale: 2.0 },
-          { model: 'pine_tree4', x: -76, y: 0, z: 82, ry: THREE.MathUtils.degToRad(288), scale: 2.0 },
+          { model: 'pine_tree', x: -162, y: 0, z: 97, ry: THREE.MathUtils.degToRad(0), scale: 1.7 },
+          { model: 'pine_tree2', x: -146, y: 0, z: 109, ry: THREE.MathUtils.degToRad(72), scale: 1.7 },
+          { model: 'pine_tree3', x: -152, y: 0, z: 129, ry: THREE.MathUtils.degToRad(144), scale: 1.7 },
+          { model: 'pine_tree', x: -172, y: 0, z: 129, ry: THREE.MathUtils.degToRad(216), scale: 1.7 },
+          { model: 'pine_tree4', x: -178, y: 0, z: 109, ry: THREE.MathUtils.degToRad(288), scale: 1.7 },
         ]
       };
 
       const oled_black = {
         tvs: [
-          { model: 'oled_black', x: -40, y: 0, z: -10, ry: THREE.MathUtils.degToRad(70), scale: 3.0 }, // center
-          { model: 'oled_black', x: -52, y: 0, z: -25, ry: THREE.MathUtils.degToRad(200), scale: 3.0 }, // outer
-          { model: 'oled_black', x: -63, y: 0, z: -15, ry: THREE.MathUtils.degToRad(265), scale: 3.0 }, // outer
+          { model: 'oled_black', x: -100, y: 0, z: -10, ry: THREE.MathUtils.degToRad(70), scale: 3.0 },
+          { model: 'oled_black', x: -112, y: 0, z: -25, ry: THREE.MathUtils.degToRad(200), scale: 3.0 },
+          { model: 'oled_black', x: -123, y: 0, z: -15, ry: THREE.MathUtils.degToRad(265), scale: 3.0 },
         ],
         trees: [
-          { model: 'ico_tree', x: -48, y: 0, z: -28, ry: THREE.MathUtils.degToRad(0), scale: 2.0 },
-          { model: 'ico_tree2', x: -37, y: 0, z: -20, ry: THREE.MathUtils.degToRad(72), scale: 2.0 },
-          { model: 'ico_tree3', x: -41, y: 0, z: -7, ry: THREE.MathUtils.degToRad(144), scale: 2.0 },
-          { model: 'ico_tree', x: -55, y: 0, z: -7, ry: THREE.MathUtils.degToRad(216), scale: 2.0 },
-          { model: 'ico_tree2', x: -59, y: 0, z: -20, ry: THREE.MathUtils.degToRad(288), scale: 2.0 },
+          { model: 'ico_tree', x: -108, y: 0, z: -28, ry: THREE.MathUtils.degToRad(0), scale: 1.5 },
+          { model: 'ico_tree2', x: -97, y: 0, z: -20, ry: THREE.MathUtils.degToRad(72), scale: 1.5 },
+          { model: 'ico_tree3', x: -101, y: 0, z: -7, ry: THREE.MathUtils.degToRad(144), scale: 1.5 },
+          { model: 'ico_tree', x: -115, y: 0, z: -7, ry: THREE.MathUtils.degToRad(216), scale: 1.5 },
+          { model: 'ico_tree2', x: -119, y: 0, z: -20, ry: THREE.MathUtils.degToRad(288), scale: 1.5 },
         ]
       };
 
-      const TV_GROUPS = [
-        wood_crt,
-        plastic_crt,
-        old_crt_grey,
-        oled_silver,
-        oled_black,
-      ];
-
-      const PATH_TREES = [
-        // oled_black -> oled_silver
-        { model: 'ico_tree', x: -66, y: 0, z: 4, ry: THREE.MathUtils.degToRad(22), scale: 1.9 },
-        { model: 'ico_tree2', x: -40, y: 0, z: 10, ry: THREE.MathUtils.degToRad(38), scale: 1.9 },
-        { model: 'ico_tree3', x: -69, y: 0, z: 22, ry: THREE.MathUtils.degToRad(56), scale: 1.9 },
-        { model: 'ico_tree', x: -39, y: 0, z: 28, ry: THREE.MathUtils.degToRad(74), scale: 1.9 },
-        { model: 'ico_tree2', x: -67, y: 0, z: 40, ry: THREE.MathUtils.degToRad(92), scale: 1.9 },
-        { model: 'pine_tree', x: -40, y: 0, z: 46, ry: THREE.MathUtils.degToRad(108), scale: 2.0 },
-        { model: 'ico_tree3', x: -64, y: 0, z: 58, ry: THREE.MathUtils.degToRad(122), scale: 1.9 },
-        { model: 'pine_tree2', x: -39, y: 0, z: 66, ry: THREE.MathUtils.degToRad(138), scale: 2.0 },
-
-        // oled_silver -> old_crt_grey
-        { model: 'pine_tree3', x: -28, y: 0, z: 104, ry: THREE.MathUtils.degToRad(80), scale: 2.0 },
-        { model: 'pine_tree', x: -18, y: 0, z: 74, ry: THREE.MathUtils.degToRad(70), scale: 2.0 },
-        { model: 'pine_tree4', x: 0, y: 0, z: 103, ry: THREE.MathUtils.degToRad(62), scale: 2.0 },
-        { model: 'pine_tree2', x: 10, y: 0, z: 74, ry: THREE.MathUtils.degToRad(54), scale: 2.0 },
-        { model: 'ico_tree_yellow', x: 27, y: -0.5, z: 98, ry: THREE.MathUtils.degToRad(44), scale: 2.0 },
-        { model: 'pine_tree', x: 35, y: 0, z: 72, ry: THREE.MathUtils.degToRad(34), scale: 2.0 },
-        { model: 'ico_tree_yellow2', x: 53, y: -2, z: 90, ry: THREE.MathUtils.degToRad(26), scale: 2.0 },
-        { model: 'ico_tree_yellow', x: 60, y: -0.5, z: 68, ry: THREE.MathUtils.degToRad(18), scale: 2.0 },
-
-        // old_crt_grey -> plastic_crt
-        { model: 'ico_tree_yellow3', x: 84, y: -2, z: 54, ry: THREE.MathUtils.degToRad(144), scale: 2.0 },
-        { model: 'ico_tree_yellow', x: 58, y: -0.5, z: 46, ry: THREE.MathUtils.degToRad(134), scale: 2.0 },
-        { model: 'ico_tree_yellow2', x: 92, y: -2, z: 32, ry: THREE.MathUtils.degToRad(122), scale: 2.0 },
-        { model: 'pine_tree_yellow', x: 66, y: 0, z: 24, ry: THREE.MathUtils.degToRad(112), scale: 2.0 },
-        { model: 'ico_tree_yellow', x: 100, y: -0.5, z: 10, ry: THREE.MathUtils.degToRad(100), scale: 2.0 },
-        { model: 'pine_tree_yellow2', x: 74, y: 0, z: 0, ry: THREE.MathUtils.degToRad(88), scale: 2.0 },
-        { model: 'pine_tree_yellow3', x: 104, y: 0, z: -12, ry: THREE.MathUtils.degToRad(76), scale: 2.0 },
-        { model: 'pine_tree_yellow', x: 79, y: 0, z: -22, ry: THREE.MathUtils.degToRad(68), scale: 2.0 },
-
-        // plastic_crt -> wood_crt
-        { model: 'pine_tree_yellow4', x: 72, y: 0, z: -70, ry: THREE.MathUtils.degToRad(210), scale: 2.0 },
-        { model: 'pine_tree_yellow', x: 56, y: 0, z: -52, ry: THREE.MathUtils.degToRad(202), scale: 2.0 },
-        { model: 'pine_tree_yellow2', x: 48, y: 0, z: -84, ry: THREE.MathUtils.degToRad(194), scale: 2.0 },
-        { model: 'dead_tree', x: 30, y: -0.1, z: -66, ry: THREE.MathUtils.degToRad(188), scale: 2.0 },
-        { model: 'pine_tree_yellow3', x: 20, y: 0, z: -97, ry: THREE.MathUtils.degToRad(182), scale: 2.0 },
-        { model: 'dead_tree3', x: 3, y: -1.25, z: -79, ry: THREE.MathUtils.degToRad(176), scale: 2.0 },
-        { model: 'dead_tree5', x: -8, y: -0.5, z: -110, ry: THREE.MathUtils.degToRad(172), scale: 2.0 },
-        { model: 'dead_tree2', x: -18, y: -1.5, z: -95, ry: THREE.MathUtils.degToRad(168), scale: 2.0 },
-      ];
+      let PATH_TREES = [];
 
       // ── Collision data ──────────────────────────────────────────────────────────
       const colliders = [];
@@ -254,166 +196,193 @@
 
       function addColliderFromObject(object3D, expand = 0) {
         object3D.updateMatrixWorld(true);
-
         const box = new THREE.Box3().setFromObject(object3D);
         if (box.isEmpty()) return;
-
         if (expand !== 0) {
-          box.min.x -= expand;
-          box.min.z -= expand;
-          box.max.x += expand;
-          box.max.z += expand;
+          box.min.x -= expand; box.min.z -= expand;
+          box.max.x += expand; box.max.z += expand;
         }
-
         colliders.push(box);
       }
 
-      function addTreeTrunkCylinder(x, z, radius = 0.55) {
-        treeTrunkColliders.push({ x, z, radius });
+      function mirrorGroup(group) {
+        const mirror = (e) => ({ ...e, x: -e.x, z: -e.z, ry: (e.ry ?? 0) + Math.PI });
+        return { tvs: group.tvs.map(mirror), trees: group.trees.map(mirror) };
       }
+
+      const TV_GROUPS_BASE = [wood_crt, plastic_crt, old_crt_grey, oled_silver, oled_black];
+      const TV_GROUPS_MIRROR = [oled_black, oled_silver, old_crt_grey, plastic_crt, wood_crt].map(mirrorGroup);
+      const TV_GROUPS = [...TV_GROUPS_BASE, ...TV_GROUPS_MIRROR];
+
+      function groupCenter(group) {
+        const tvs = group.tvs;
+        return new THREE.Vector3(
+          tvs.reduce((s, t) => s + t.x, 0) / tvs.length,
+          0,
+          tvs.reduce((s, t) => s + t.z, 0) / tvs.length
+        );
+      }
+
+      function getProtectedPositions() {
+        const pts = [];
+        for (const group of TV_GROUPS) {
+          for (const tv of group.tvs) pts.push({ x: tv.x, z: tv.z, radius: 14 });
+          for (const tree of group.trees) pts.push({ x: tree.x, z: tree.z, radius: 9 });
+        }
+        return pts;
+      }
+
+      function isPathTreePositionClear(x, z, protectedPoints) {
+        return !protectedPoints.some((p) => {
+          const dx = x - p.x, dz = z - p.z;
+          return (dx * dx + dz * dz) < (p.radius * p.radius);
+        });
+      }
+
+      function treeYOffsetFor(model) {
+        if (model === 'dead_tree2') return -1.5;
+        if (model === 'dead_tree3') return -1.25;
+        if (model === 'dead_tree5') return -0.5;
+        if (model.startsWith('dead_tree')) return -0.1;
+        if (model === 'ico_tree_yellow2' || model === 'ico_tree_yellow3') return -2;
+        if (model === 'ico_tree_yellow') return -0.5;
+        return 0;
+      }
+
+      function treeScaleFor(model) {
+        if (model.startsWith('dead_tree')) return 2.0;
+        if (model.startsWith('ico_tree')) return 1.1;
+        if (model.startsWith('pine_tree')) return 1.7;
+        return 2.0;
+      }
+
+      const PATH_GROUPS_BASE = [oled_black, oled_silver, old_crt_grey, plastic_crt, wood_crt];
+      const PATH_GROUPS_MIRROR = PATH_GROUPS_BASE.map(mirrorGroup);
+
+      // Both sides use the same segment model progression
+      const PATH_SEGMENT_MODELS = [
+        ['ico_tree', 'ico_tree2', 'ico_tree3', 'pine_tree', 'pine_tree2', 'pine_tree3'],
+        ['pine_tree', 'pine_tree2', 'pine_tree3', 'ico_tree_yellow', 'ico_tree_yellow2', 'ico_tree_yellow3'],
+        ['ico_tree_yellow', 'ico_tree_yellow2', 'ico_tree_yellow3', 'ico_tree_orange', 'ico_tree_orange2', 'ico_tree_orange3', 'pine_tree_orange', 'pine_tree_orange2', 'pine_tree_orange3'],
+        ['pine_tree_orange', 'pine_tree_orange2', 'pine_tree_orange3', 'ico_tree_orange', 'ico_tree_orange2', 'ico_tree_orange3', 'pine_tree_orange', 'ico_tree_orange', 'pine_tree_orange2', 'ico_tree_orange2', 'dead_tree', 'dead_tree1', 'dead_tree2', 'dead_tree3', 'dead_tree4', 'dead_tree5', 'dead_tree', 'dead_tree2', 'dead_tree4'],
+      ];
+
+      function buildPathTreesAlongCenters(centerGroups, segmentModelLists, options = {}) {
+        const result = [];
+        if (centerGroups.length < 2) return result;
+
+        const centers = centerGroups.map(groupCenter);
+        const protectedPoints = getProtectedPositions();
+        const { samplesPerSegment: defaultSamples = 8, segmentSampleCounts = [], sideOffsetA = 8, sideOffsetB = 14 } = options;
+
+        for (let seg = 0; seg < centers.length - 1; seg++) {
+          const curve = new THREE.CatmullRomCurve3([centers[seg], centers[seg + 1]], false, 'catmullrom', 0.0);
+          const models = segmentModelLists[seg] ?? ['ico_tree'];
+          const samples = segmentSampleCounts[seg] ?? defaultSamples;
+
+          for (let i = 0; i <= samples; i++) {
+            const u = i / samples;
+            const p = curve.getPointAt(u);
+            const tangent = curve.getTangentAt(u).normalize();
+            const normal = new THREE.Vector3(-tangent.z, 0, tangent.x).normalize();
+            const sign = i % 2 === 0 ? 1 : -1;
+
+            const offsets = [
+              sign * sideOffsetA, -sign * sideOffsetA,
+              sign * sideOffsetB, -sign * sideOffsetB,
+              sign * (sideOffsetB + 8), -sign * (sideOffsetB + 8),
+              sign * (sideOffsetB + 16), -sign * (sideOffsetB + 16),
+            ];
+
+            let chosenPos = null;
+            for (const offset of offsets) {
+              const testPos = p.clone().addScaledVector(normal, offset);
+              if (isPathTreePositionClear(testPos.x, testPos.z, protectedPoints)) { chosenPos = testPos; break; }
+            }
+
+            if (!chosenPos) continue;
+
+            const model = models[i % models.length];
+            result.push({ model, x: chosenPos.x, y: treeYOffsetFor(model), z: chosenPos.z, ry: Math.atan2(tangent.x, tangent.z), scale: treeScaleFor(model) });
+          }
+        }
+
+        return result;
+      }
+
+      PATH_TREES = [
+        ...buildPathTreesAlongCenters(PATH_GROUPS_BASE, PATH_SEGMENT_MODELS, { samplesPerSegment: 8, segmentSampleCounts: [8, 8, 8, 28], sideOffsetA: 10, sideOffsetB: 18 }),
+        ...buildPathTreesAlongCenters(PATH_GROUPS_MIRROR, PATH_SEGMENT_MODELS, { samplesPerSegment: 8, segmentSampleCounts: [8, 8, 8, 22], sideOffsetA: 10, sideOffsetB: 18 }),
+      ];
+
+      for (const group of TV_GROUPS) {
+        for (const tree of group.trees) tree.scale = treeScaleFor(tree.model);
+      }
+      for (const tree of PATH_TREES) tree.scale = treeScaleFor(tree.model);
+
+      function addTreeTrunkCylinder(x, z, radius = 0.55) { treeTrunkColliders.push({ x, z, radius }); }
 
       function collidesAtPosition(position) {
         const playerBox = new THREE.Box3(
-          new THREE.Vector3(
-            position.x - PLAYER_RADIUS,
-            position.y - PLAYER_HEIGHT,
-            position.z - PLAYER_RADIUS
-          ),
-          new THREE.Vector3(
-            position.x + PLAYER_RADIUS,
-            position.y,
-            position.z + PLAYER_RADIUS
-          )
+          new THREE.Vector3(position.x - PLAYER_RADIUS, position.y - PLAYER_HEIGHT, position.z - PLAYER_RADIUS),
+          new THREE.Vector3(position.x + PLAYER_RADIUS, position.y, position.z + PLAYER_RADIUS)
         );
-
-        for (const box of colliders) {
-          if (playerBox.intersectsBox(box)) {
-            return true;
-          }
-        }
-
-        for (const trunk of treeTrunkColliders) {
-          const dx = position.x - trunk.x;
-          const dz = position.z - trunk.z;
-          const minDistance = PLAYER_RADIUS + trunk.radius;
-
-          if ((dx * dx + dz * dz) < (minDistance * minDistance)) {
-            return true;
-          }
-        }
-
-        return false;
+        if (colliders.some((box) => playerBox.intersectsBox(box))) return true;
+        return treeTrunkColliders.some((trunk) => {
+          const dx = position.x - trunk.x, dz = position.z - trunk.z;
+          return (dx * dx + dz * dz) < ((PLAYER_RADIUS + trunk.radius) ** 2);
+        });
       }
 
       // ── Placement markers / labels ─────────────────────────────────────────────
+      function makeTextSprite(text, opts = {}) {
+        const fontSize = opts.fontSize ?? 28;
+        const padding = opts.padding ?? 8;
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        ctx.font = `${fontSize}px monospace`;
+        const textWidth = Math.ceil(ctx.measureText(text).width);
+        canvas.width = textWidth + padding * 2;
+        canvas.height = fontSize + padding * 2;
+        ctx.font = `${fontSize}px monospace`;
+        ctx.fillStyle = 'rgba(0,0,0,0.75)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(1, 1, canvas.width - 2, canvas.height - 2);
+        ctx.fillStyle = 'white';
+        ctx.textBaseline = 'top';
+        ctx.fillText(text, padding, padding);
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.minFilter = THREE.LinearFilter;
+        const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, depthTest: false, depthWrite: false }));
+        sprite.scale.set(canvas.width * 0.03, canvas.height * 0.03, 1);
+        return sprite;
+      }
+
       function addPlacementMarkers() {
         TV_GROUPS.forEach((group, groupIndex) => {
           group.tvs.forEach((entry, tvIndex) => {
-            const x = entry.x ?? 0;
-            const y = entry.y ?? 0;
-            const z = entry.z ?? 0;
+            const { x = 0, y = 0, z = 0 } = entry;
 
-            const marker = new THREE.Mesh(
-              new THREE.BoxGeometry(0.9, 0.9, 0.9),
-              new THREE.MeshBasicMaterial({ color: 0xff0000 })
-            );
+            const marker = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.9, 0.9), new THREE.MeshBasicMaterial({ color: 0xff0000 }));
             marker.position.set(x, y + 0.45, z);
             scene.add(marker);
 
-            const pole = new THREE.Mesh(
-              new THREE.CylinderGeometry(0.05, 0.05, 2.5, 8),
-              new THREE.MeshBasicMaterial({ color: 0xffff00 })
-            );
+            const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 2.5, 8), new THREE.MeshBasicMaterial({ color: 0xffff00 }));
             pole.position.set(x, y + 1.25, z);
             scene.add(pole);
 
-            const ring = new THREE.Mesh(
-              new THREE.TorusGeometry(0.7, 0.06, 8, 24),
-              new THREE.MeshBasicMaterial({ color: 0xffffff })
-            );
+            const ring = new THREE.Mesh(new THREE.TorusGeometry(0.7, 0.06, 8, 24), new THREE.MeshBasicMaterial({ color: 0xffffff }));
             ring.rotation.x = Math.PI / 2;
             ring.position.set(x, y + 0.03, z);
             scene.add(ring);
 
-            const label = makeTextSprite(
-              `${groupIndex}.${tvIndex}: ${entry.model} (${x}, ${y}, ${z})`,
-              { fontSize: 26, padding: 10 }
-            );
+            const label = makeTextSprite(`${groupIndex}.${tvIndex}: ${entry.model} (${x}, ${y}, ${z})`, { fontSize: 26, padding: 10 });
             label.position.set(x, y + 3.0, z);
             scene.add(label);
           });
         });
-      }
-
-      function addPathTreePlacements() {
-        PATH_TREES.forEach((entry) => {
-          const source = treeModels[entry.model];
-          if (!source) {
-            console.warn(`Missing path tree model: ${entry.model}`);
-            return;
-          }
-
-          const wrapper = new THREE.Group();
-          wrapper.position.set(entry.x, entry.y ?? 0, entry.z);
-          wrapper.rotation.set(0, entry.ry ?? 0, 0);
-          wrapper.scale.setScalar(entry.scale ?? 1);
-
-          const instance = source.clone(true);
-
-          const box = new THREE.Box3().setFromObject(instance);
-          const center = new THREE.Vector3();
-          box.getCenter(center);
-
-          instance.position.x -= center.x;
-          instance.position.z -= center.z;
-          instance.position.y -= box.min.y;
-
-          wrapper.add(instance);
-          scene.add(wrapper);
-
-          addTreeTrunkCylinder(entry.x, entry.z, 0.55);
-        });
-      }
-
-      function makeTextSprite(text, opts = {}) {
-        const fontSize = opts.fontSize ?? 28;
-        const padding = opts.padding ?? 8;
-
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-
-        ctx.font = `${fontSize}px monospace`;
-        const textWidth = Math.ceil(ctx.measureText(text).width);
-
-        canvas.width = textWidth + padding * 2;
-        canvas.height = fontSize + padding * 2;
-
-        ctx.font = `${fontSize}px monospace`;
-        ctx.fillStyle = 'rgba(0,0,0,0.75)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        ctx.strokeStyle = 'rgba(255,255,255,0.9)';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(1, 1, canvas.width - 2, canvas.height - 2);
-
-        ctx.fillStyle = 'white';
-        ctx.textBaseline = 'top';
-        ctx.fillText(text, padding, padding);
-
-        const texture = new THREE.CanvasTexture(canvas);
-        texture.minFilter = THREE.LinearFilter;
-
-        const material = new THREE.SpriteMaterial({
-          map: texture,
-          depthTest: false,
-          depthWrite: false
-        });
-
-        const sprite = new THREE.Sprite(material);
-        const scale = 0.03;
-        sprite.scale.set(canvas.width * scale, canvas.height * scale, 1);
-
-        return sprite;
       }
 
       addPlacementMarkers();
@@ -424,204 +393,115 @@
       const TREE_BASE_PATH = '../assets/trees/';
 
       const modelManifest = {
-        wood_crt: 'wood_crt.glb',
-        plastic_crt: 'plastic_crt.glb',
-        old_crt_grey: 'old_crt_grey.glb',
-        oled_silver: 'oled_silver.glb',
-        oled_black: 'oled_black.glb',
+        wood_crt: 'wood_crt.glb', plastic_crt: 'plastic_crt.glb',
+        old_crt_grey: 'old_crt_grey.glb', oled_silver: 'oled_silver.glb', oled_black: 'oled_black.glb',
       };
 
       const treeManifest = {
-        ico_tree: 'ico_tree.glb',
-        ico_tree2: 'ico_tree2.glb',
-        ico_tree3: 'ico_tree3.glb',
-
-        pine_tree: 'pine_tree.glb',
-        pine_tree2: 'pine_tree2.glb',
-        pine_tree3: 'pine_tree3.glb',
-        pine_tree4: 'pine_tree4.glb',
-
-        pine_tree_yellow: 'pine_tree_yellow.glb',
-        pine_tree_yellow2: 'pine_tree_yellow2.glb',
-        pine_tree_yellow3: 'pine_tree_yellow3.glb',
-        pine_tree_yellow4: 'pine_tree_yellow4.glb',
-
-        ico_tree_yellow: 'ico_tree_yellow.glb',
-        ico_tree_yellow2: 'ico_tree_yellow2.glb',
-        ico_tree_yellow3: 'ico_tree_yellow3.glb',
-
-        pine_tree_orange: 'pine_tree_orange.glb',
-        pine_tree_orange2: 'pine_tree_orange2.glb',
-        pine_tree_orange3: 'pine_tree_orange3.glb',
-        pine_tree_orange4: 'pine_tree_orange4.glb',
-
-        dead_tree: 'dead_tree.glb',
-        dead_tree1: 'dead_tree1.glb',
-        dead_tree2: 'dead_tree2.glb',
-        dead_tree3: 'dead_tree3.glb',
-        dead_tree4: 'dead_tree4.glb',
-        dead_tree5: 'dead_tree5.glb',
+        ico_tree: 'ico_tree.glb', ico_tree2: 'ico_tree2.glb', ico_tree3: 'ico_tree3.glb',
+        ico_tree_orange: 'ico_tree_orange.glb', ico_tree_orange2: 'ico_tree_orange2.glb', ico_tree_orange3: 'ico_tree_orange3.glb',
+        pine_tree: 'pine_tree.glb', pine_tree2: 'pine_tree2.glb', pine_tree3: 'pine_tree3.glb', pine_tree4: 'pine_tree4.glb',
+        pine_tree_yellow: 'pine_tree_yellow.glb', pine_tree_yellow2: 'pine_tree_yellow2.glb', pine_tree_yellow3: 'pine_tree_yellow3.glb', pine_tree_yellow4: 'pine_tree_yellow4.glb',
+        ico_tree_yellow: 'ico_tree_yellow.glb', ico_tree_yellow2: 'ico_tree_yellow2.glb', ico_tree_yellow3: 'ico_tree_yellow3.glb',
+        pine_tree_orange: 'pine_tree_orange.glb', pine_tree_orange2: 'pine_tree_orange2.glb', pine_tree_orange3: 'pine_tree_orange3.glb', pine_tree_orange4: 'pine_tree_orange4.glb',
+        dead_tree: 'dead_tree.glb', dead_tree1: 'dead_tree1.glb', dead_tree2: 'dead_tree2.glb',
+        dead_tree3: 'dead_tree3.glb', dead_tree4: 'dead_tree4.glb', dead_tree5: 'dead_tree5.glb',
       };
 
       const treeModels = {};
       const tvModels = {};
 
       function loadGLTF(url) {
-        return new Promise((resolve, reject) => {
-          loader.load(url, resolve, undefined, reject);
-        });
-      }
-
-      function cloneModel(sceneRoot) {
-        return sceneRoot.clone(true);
+        return new Promise((resolve, reject) => loader.load(url, resolve, undefined, reject));
       }
 
       function setAllMeshesDoubleSided(root) {
         root.traverse((child) => {
           if (!child.isMesh) return;
-
-          if (Array.isArray(child.material)) {
-            child.material.forEach((mat) => {
-              if (mat) mat.side = THREE.DoubleSide;
-            });
-          } else if (child.material) {
-            child.material.side = THREE.DoubleSide;
-          }
+          const mats = Array.isArray(child.material) ? child.material : [child.material];
+          mats.forEach((mat) => { if (mat) mat.side = THREE.DoubleSide; });
         });
       }
 
       function centerAndGroundModel(modelRoot) {
         modelRoot.updateMatrixWorld(true);
-
         const box = new THREE.Box3().setFromObject(modelRoot);
         if (box.isEmpty()) return;
-
         const center = new THREE.Vector3();
         box.getCenter(center);
-
         modelRoot.position.x -= center.x;
         modelRoot.position.z -= center.z;
         modelRoot.position.y -= box.min.y;
       }
 
+      // Shared helper: clone, center/ground, and place a model into the scene
+      function placeModel(source, entry, { doubleSided = false, isTV = false } = {}) {
+        const wrapper = new THREE.Group();
+        wrapper.position.set(entry.x ?? 0, entry.y ?? 0, entry.z ?? 0);
+        wrapper.rotation.set(0, entry.ry ?? 0, 0);
+        wrapper.scale.setScalar(entry.scale ?? 1);
+
+        const instance = source.clone(true);
+        if (doubleSided) setAllMeshesDoubleSided(instance);
+
+        if (isTV) {
+          centerAndGroundModel(instance);
+        } else {
+          const box = new THREE.Box3().setFromObject(instance);
+          const center = new THREE.Vector3();
+          box.getCenter(center);
+          instance.position.x -= center.x;
+          instance.position.z -= center.z;
+          instance.position.y -= box.min.y;
+        }
+
+        wrapper.add(instance);
+        scene.add(wrapper);
+        return wrapper;
+      }
+
       function addModelPlacements() {
-        TV_GROUPS.forEach((group, groupIndex) => {
-          group.tvs.forEach((entry, tvIndex) => {
+        TV_GROUPS.forEach((group, gi) => {
+          group.tvs.forEach((entry, ti) => {
             const source = tvModels[entry.model];
-
-            if (!source) {
-              console.warn(`Missing TV model for group ${groupIndex}, tv ${tvIndex}: ${entry.model}`);
-              return;
-            }
-
-            const wrapper = new THREE.Group();
-            wrapper.position.set(entry.x ?? 0, entry.y ?? 0, entry.z ?? 0);
-            wrapper.rotation.set(0, entry.ry ?? 0, 0);
-            wrapper.scale.setScalar(entry.scale ?? 1);
-
-            const instance = cloneModel(source);
-            setAllMeshesDoubleSided(instance);
-            wrapper.add(instance);
-
-            centerAndGroundModel(instance);
-
-            scene.add(wrapper);
+            if (!source) { console.warn(`Missing TV model for group ${gi}, tv ${ti}: ${entry.model}`); return; }
+            const wrapper = placeModel(source, entry, { doubleSided: true, isTV: true });
             addColliderFromObject(wrapper, 0.3);
           });
         });
       }
 
-      function addTreePlacements() {
-        TV_GROUPS.forEach((group) => {
-          group.trees.forEach((entry) => {
-            const source = treeModels[entry.model];
-            if (!source) {
-              console.warn(`Missing tree model: ${entry.model}`);
-              return;
-            }
-
-            const wrapper = new THREE.Group();
-            wrapper.position.set(entry.x, entry.y, entry.z);
-            wrapper.rotation.set(0, entry.ry ?? 0, 0);
-            wrapper.scale.setScalar(entry.scale ?? 1);
-
-            const instance = source.clone(true);
-
-            const box = new THREE.Box3().setFromObject(instance);
-            const center = new THREE.Vector3();
-            box.getCenter(center);
-
-            instance.position.x -= center.x;
-            instance.position.z -= center.z;
-            instance.position.y -= box.min.y;
-
-            wrapper.add(instance);
-            scene.add(wrapper);
-
-            addTreeTrunkCylinder(entry.x, entry.z, 0.55);
-          });
-        });
-      }
-
-      async function loadTreeModels() {
-        const jobs = Object.entries(treeManifest).map(([key, file]) => {
-          return loadGLTF(`${TREE_BASE_PATH}${file}`)
-            .then((gltf) => {
-              treeModels[key] = gltf.scene;
-            })
-            .catch((error) => {
-              console.error(`Error loading ${file}:`, error);
-            });
-        });
-
-        await Promise.all(jobs);
+      function addTreePlacements(entries, modelBank) {
+        for (const entry of entries) {
+          const source = modelBank[entry.model];
+          if (!source) { console.warn(`Missing tree model: ${entry.model}`); continue; }
+          placeModel(source, entry);
+          addTreeTrunkCylinder(entry.x, entry.z, 0.55);
+        }
       }
 
       async function loadAllModels() {
-        setPanel(
-          `Loading TV models...
+        setPanel('Loading TV models...');
 
-If some TVs do not sit on markers, the usual cause is:
-- Blender origin/pivot offset
-- unapplied transforms
-- parent/object offsets inside the export
+        const loadBank = async (manifest, basePath, bank) => {
+          await Promise.all(Object.entries(manifest).map(([key, file]) =>
+            loadGLTF(`${basePath}${file}`)
+              .then((gltf) => { bank[key] = gltf.scene; })
+              .catch((err) => console.error(`Error loading ${file}:`, err))
+          ));
+        };
 
-This version auto-centers each model by its bounding box
-and drops its bottom to Y=0 at the marker.`
-        );
-
-        const jobs = Object.entries(modelManifest).map(([key, file]) => {
-          return loadGLTF(`${MODEL_BASE_PATH}${file}`)
-            .then((gltf) => {
-              tvModels[key] = gltf.scene;
-            })
-            .catch((error) => {
-              console.error(`Error loading ${file}:`, error);
-            });
-        });
-
-        await Promise.all(jobs);
+        await loadBank(modelManifest, MODEL_BASE_PATH, tvModels);
         addModelPlacements();
 
-        await loadTreeModels();
-        addTreePlacements();
-        addPathTreePlacements();
+        await loadBank(treeManifest, TREE_BASE_PATH, treeModels);
+        addTreePlacements(TV_GROUPS.flatMap((g) => g.trees), treeModels);
+        addTreePlacements(PATH_TREES, treeModels);
 
         setPanel(
-          `Ready
-
-Current model path:
-${MODEL_BASE_PATH}
-
-Loaded models:
-- wood_crt: ${tvModels.wood_crt ? 'ok' : 'missing'}
-- plastic_crt: ${tvModels.plastic_crt ? 'ok' : 'missing'}
-- old_crt_grey: ${tvModels.old_crt_grey ? 'ok' : 'missing'}
-- oled_silver: ${tvModels.oled_silver ? 'ok' : 'missing'}
-- oled_black: ${tvModels.oled_black ? 'ok' : 'missing'}
-
-TV box colliders: ${colliders.length}
-Tree trunk colliders: ${treeTrunkColliders.length}`
+          `Ready\n\nCurrent model path:\n${MODEL_BASE_PATH}\n\nLoaded models:\n` +
+          Object.keys(modelManifest).map((k) => `- ${k}: ${tvModels[k] ? 'ok' : 'missing'}`).join('\n') +
+          `\n\nTV box colliders: ${colliders.length}\nTree trunk colliders: ${treeTrunkColliders.length}`
         );
       }
 
@@ -634,21 +514,10 @@ Tree trunk colliders: ${treeTrunkColliders.length}`
       camera.position.set(START_POINT.x, 1.7, START_POINT.z);
       camera.lookAt(0, 1.7, 0);
 
-      function tryLock() {
-        controls.lock();
-      }
-
-      overlay.addEventListener('click', tryLock);
-      renderer.domElement.addEventListener('click', tryLock);
-      document.body.addEventListener('click', tryLock);
-
-      controls.addEventListener('lock', () => {
-        overlay.style.display = 'none';
-      });
-
-      controls.addEventListener('unlock', () => {
-        overlay.style.display = 'flex';
-      });
+      const tryLock = () => controls.lock();
+      [overlay, renderer.domElement, document.body].forEach((el) => el.addEventListener('click', tryLock));
+      controls.addEventListener('lock', () => { overlay.style.display = 'none'; });
+      controls.addEventListener('unlock', () => { overlay.style.display = 'flex'; });
 
       let verticalVelocity = 0;
       let isOnGround = true;
@@ -656,25 +525,16 @@ Tree trunk colliders: ${treeTrunkColliders.length}`
 
       document.addEventListener('keydown', (e) => {
         keys[e.code] = true;
-
         if (e.code === 'Space') {
           e.preventDefault();
-
-          if (controls.isLocked && isOnGround) {
-            verticalVelocity = JUMP_VELOCITY;
-            isOnGround = false;
-          }
+          if (controls.isLocked && isOnGround) { verticalVelocity = JUMP_VELOCITY; isOnGround = false; }
         }
       });
-
-      document.addEventListener('keyup', (e) => {
-        keys[e.code] = false;
-      });
+      document.addEventListener('keyup', (e) => { keys[e.code] = false; });
 
       // ── Animate ─────────────────────────────────────────────────────────────────
       const _moveDir = new THREE.Vector3();
       let prev = performance.now();
-
       let frames = 0;
       let lastFpsTime = performance.now();
 
@@ -684,7 +544,11 @@ Tree trunk colliders: ${treeTrunkColliders.length}`
         frames++;
         const nowFps = performance.now();
         if (nowFps - lastFpsTime >= 1000) {
-          panel.textContent = `FPS: ${frames}`;
+          const fwd = new THREE.Vector3();
+          camera.getWorldDirection(fwd);
+          let lookDeg = THREE.MathUtils.radToDeg(Math.atan2(fwd.x, fwd.z));
+          if (lookDeg < 0) lookDeg += 360;
+          panel.textContent = `FPS: ${frames} | X: ${camera.position.x.toFixed(2)} | Y: ${camera.position.y.toFixed(2)} | Z: ${camera.position.z.toFixed(2)} | Angle: ${lookDeg.toFixed(1)}°`;
           frames = 0;
           lastFpsTime = nowFps;
         }
@@ -695,9 +559,7 @@ Tree trunk colliders: ${treeTrunkColliders.length}`
 
         if (controls.isLocked) {
           const speed = (keys['ShiftLeft'] || keys['ShiftRight']) ? 25 : 15;
-
           _moveDir.set(0, 0, 0);
-
           if (keys['KeyW'] || keys['ArrowUp']) _moveDir.z -= 1;
           if (keys['KeyS'] || keys['ArrowDown']) _moveDir.z += 1;
           if (keys['KeyA'] || keys['ArrowLeft']) _moveDir.x -= 1;
@@ -705,7 +567,6 @@ Tree trunk colliders: ${treeTrunkColliders.length}`
 
           if (_moveDir.lengthSq() > 0) {
             _moveDir.normalize();
-
             const moveAmountForward = -_moveDir.z * speed * delta;
             const moveAmountRight = _moveDir.x * speed * delta;
 
@@ -717,18 +578,11 @@ Tree trunk colliders: ${treeTrunkColliders.length}`
             const right = new THREE.Vector3();
             right.crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
 
-            const currentPos = camera.position.clone();
+            const tryForward = camera.position.clone().addScaledVector(forward, moveAmountForward);
+            if (!collidesAtPosition(tryForward)) controls.moveForward(moveAmountForward);
 
-            const tryForward = currentPos.clone().addScaledVector(forward, moveAmountForward);
-            if (!collidesAtPosition(tryForward)) {
-              controls.moveForward(moveAmountForward);
-            }
-
-            const afterForward = camera.position.clone();
-            const tryRight = afterForward.clone().addScaledVector(right, moveAmountRight);
-            if (!collidesAtPosition(tryRight)) {
-              controls.moveRight(moveAmountRight);
-            }
+            const tryRight = camera.position.clone().addScaledVector(right, moveAmountRight);
+            if (!collidesAtPosition(tryRight)) controls.moveRight(moveAmountRight);
           }
 
           verticalVelocity -= GRAVITY * delta;
@@ -747,10 +601,7 @@ Tree trunk colliders: ${treeTrunkColliders.length}`
       animate();
 
       setInterval(() => {
-        console.log(
-          'Triangles:', renderer.info.render.triangles,
-          'Draw calls:', renderer.info.render.calls
-        );
+        console.log('Triangles:', renderer.info.render.triangles, 'Draw calls:', renderer.info.render.calls);
       }, 1000);
 
       window.addEventListener('resize', () => {

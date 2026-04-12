@@ -118,3 +118,41 @@
       padding: 10px 12px;
       font: 12px/1.5 monospace;
     }
+
+
+    #crt-static {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 30;
+
+  opacity: 0;
+  mix-blend-mode: screen;
+
+  background-image:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,0.05) 0px,
+      rgba(255,255,255,0.05) 1px,
+      rgba(0,0,0,0.03) 2px,
+      rgba(0,0,0,0.03) 3px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255,255,255,0.03) 0px,
+      rgba(255,255,255,0.03) 1px,
+      rgba(0,0,0,0.02) 2px,
+      rgba(0,0,0,0.02) 4px
+    );
+
+  background-size: 100% 4px, 6px 100%;
+  animation: crtFlicker 0.08s steps(2) infinite;
+}
+
+@keyframes crtFlicker {
+  0%   { transform: translate(0px, 0px); filter: brightness(1); }
+  25%  { transform: translate(1px, -1px); filter: brightness(1.05); }
+  50%  { transform: translate(-1px, 1px); filter: brightness(0.95); }
+  75%  { transform: translate(1px, 1px); filter: brightness(1.02); }
+  100% { transform: translate(0px, 0px); filter: brightness(1); }
+}
