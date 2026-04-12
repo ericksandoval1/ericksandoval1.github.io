@@ -515,10 +515,20 @@
       camera.position.set(START_POINT.x, 1.7, START_POINT.z);
       camera.lookAt(0, 1.7, 0);
 
-      const tryLock = () => controls.lock();
-      [overlay, renderer.domElement, document.body].forEach((el) => el.addEventListener('click', tryLock));
-      controls.addEventListener('lock', () => { overlay.style.display = 'none'; });
-      controls.addEventListener('unlock', () => { overlay.style.display = 'flex'; });
+      function tryLock() {
+        controls.lock();
+      }
+
+      document.addEventListener('click', tryLock);
+
+      controls.addEventListener('lock', () => {
+        overlay.style.display = 'none';
+      });
+
+      controls.addEventListener('unlock', () => {
+        overlay.style.display = 'flex';
+      });
+
 
       let verticalVelocity = 0;
       let isOnGround = true;
