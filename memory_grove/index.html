@@ -17,7 +17,7 @@
     <p>ESC to release</p>
   </div>
 
-  <div id="hint">WASD · MOUSE LOOK · SHIFT SPRINT · SPACE JUMP</div>
+  <div id="hint">WASD · MOUSE LOOK · SHIFT SPRINT · SPACE JUMP · E INTERACT</div>
   <div id="panel">Starting…</div>
   <div id="error"></div>
   <div id="legend">
@@ -41,6 +41,7 @@
     const panel = document.getElementById('panel');
     const errorBox = document.getElementById('error');
     const overlay = document.getElementById('overlay');
+    const hint = document.getElementById('hint');
 
     function setPanel(text) { panel.textContent = text; }
 
@@ -90,6 +91,7 @@
 
       const hemi = new THREE.HemisphereLight(0xffc58a, 0x2b1d16, 0.45);
       scene.add(hemi);
+
       // ── Ground ──────────────────────────────────────────────────────────────────
       const ground = new THREE.Mesh(
         new THREE.PlaneGeometry(800, 800),
@@ -111,14 +113,380 @@
       spawnMarker.position.set(0, 0.11, 0);
       scene.add(spawnMarker);
 
+      // ── TV video system ─────────────────────────────────────────────────────────
+      const INTERACT_DISTANCE = 14;
+      const TV_AUTO_OFF_MS = 30000;
+
+      // Assign one video per exact TV id
+      const TV_VIDEO_BY_ID = {
+        wood_1: {
+          src: '../assets/videos/looney_tunes.mp4',
+          rotationDeg: 0,
+          fit: 'contain',
+          repeatX: 0.92,
+          repeatY: 0.92,
+          offsetX: 0.04,
+          offsetY: 0.04,
+        },
+        wood_2: {
+          src: '../assets/videos/fullhouse.mp4',
+          rotationDeg: 90,
+          fit: 'contain',
+          repeatX: 0.82,
+          repeatY: 0.82,
+          offsetX: 0.09,
+          offsetY: 0.09,
+        },
+        wood_3: {
+          src: '../assets/videos/courage.mp4',
+          rotationDeg: 0,
+          fit: 'contain',
+          repeatX: 0.90,
+          repeatY: 0.90,
+          offsetX: 0.05,
+          offsetY: 0.05,
+        },
+
+        plastic_1: { src: '../assets/videos/spongebob_bowl.mp4', rotationDeg: 0, fit: 'cover', repeatX: 1, repeatY: 1, offsetX: 0, offsetY: 0 },
+        plastic_2: { src: '../assets/videos/spongebob_dutchman.mp4', rotationDeg: 0, fit: 'cover', repeatX: 1, repeatY: 1, offsetX: 0, offsetY: 0 },
+        plastic_3: { src: '../assets/videos/fosters.mp4', rotationDeg: 0, fit: 'cover', repeatX: 1, repeatY: 1, offsetX: 0, offsetY: 0 },
+      };
+
+      // Exact screen material name from Blender for each TV model
+      const SCREEN_MATERIAL_BY_MODEL = {
+        oled_black: 'TVScreen_oled',
+        oled_silver: 'darkgrey_oled',
+        plastic_crt: 'TVScreen_black_crt',
+        wood_crt: 'TVScreen',
+        old_crt_grey: 'greycrt',
+      };
+
+      const tvInteractables = [];
+      let hoveredTV = null;
+      let hudInfo = 'Starting…';
+
+      function setHudInfo(text) {
+        hudInfo = text;
+      }
+
+      function updatePanelText() {
+        if (hoveredTV && controls.isLocked) {
+          const state = hoveredTV.isOn ? 'ON' : 'OFF';
+          const remain = hoveredTV.isOn
+            ? Math.max(0, Math.ceil((hoveredTV.autoOffAt - performance.now()) / 1000))
+            : 0;
+
+          panel.textContent = hoveredTV.isOn
+            ? `${hudInfo} | [E] ${hoveredTV.id} ${state} | Auto-off in ${remain}s`
+            : `${hudInfo} | [E] ${hoveredTV.id} ${state}`;
+        } else {
+          panel.textContent = hudInfo;
+        }
+      }
+
+      function getScreenAspectForModel(modelName) {
+        // tweak these if needed
+        switch (modelName) {
+          case 'wood_crt': return 4 / 3;
+          case 'plastic_crt': return 4 / 3;
+          case 'old_crt_grey': return 4 / 3;
+          case 'oled_silver': return 16 / 9;
+          case 'oled_black': return 16 / 9;
+          default: return 4 / 3;
+        }
+      }
+
+      function applyVideoTextureFit(texture, videoWidth, videoHeight, screenAspect, fit = 'contain', rotationDeg = 0) {
+        if (!videoWidth || !videoHeight) return;
+
+        let mediaAspect = videoWidth / videoHeight;
+        const rot = ((rotationDeg % 360) + 360) % 360;
+
+        // if rotated 90 or 270, swap aspect
+        if (rot === 90 || rot === 270) {
+          mediaAspect = videoHeight / videoWidth;
+        }
+
+        texture.center.set(0.5, 0.5);
+        texture.rotation = THREE.MathUtils.degToRad(rotationDeg);
+
+        let repeatX = 1;
+        let repeatY = 1;
+
+        if (fit === 'cover') {
+          if (mediaAspect > screenAspect) {
+            repeatX = screenAspect / mediaAspect;
+            repeatY = 1;
+          } else {
+            repeatX = 1;
+            repeatY = mediaAspect / screenAspect;
+          }
+        } else {
+          // contain
+          if (mediaAspect > screenAspect) {
+            repeatX = 1;
+            repeatY = screenAspect / mediaAspect;
+          } else {
+            repeatX = mediaAspect / screenAspect;
+            repeatY = 1;
+          }
+        }
+
+        texture.repeat.set(repeatX, repeatY);
+        texture.offset.set((1 - repeatX) * 0.5, (1 - repeatY) * 0.5);
+        texture.needsUpdate = true;
+      }
+
+      function applyManualTextureAdjust(texture, cfg = {}) {
+        const repeatX = cfg.repeatX ?? 1.0;
+        const repeatY = cfg.repeatY ?? 1.0;
+        const offsetX = cfg.offsetX ?? 0.0;
+        const offsetY = cfg.offsetY ?? 0.0;
+
+        texture.repeat.multiply(new THREE.Vector2(repeatX, repeatY));
+        texture.offset.x += offsetX;
+        texture.offset.y += offsetY;
+        texture.needsUpdate = true;
+      }
+
+      function createVideoMaterial(videoConfig, tvId, modelName) {
+        const videoPath = typeof videoConfig === 'string' ? videoConfig : videoConfig.src;
+        const cfg = typeof videoConfig === 'string' ? {} : videoConfig;
+
+        const video = document.createElement('video');
+        video.src = videoPath;
+        video.crossOrigin = 'anonymous';
+        video.loop = true;
+        video.muted = true;
+        video.playsInline = true;
+        video.preload = 'auto';
+
+        const texture = new THREE.VideoTexture(video);
+        texture.encoding = THREE.sRGBEncoding;
+        texture.minFilter = THREE.LinearFilter;
+        texture.magFilter = THREE.LinearFilter;
+        texture.generateMipmaps = false;
+
+        video.addEventListener('loadedmetadata', () => {
+          const screenAspect = getScreenAspectForModel(modelName);
+
+          applyVideoTextureFit(
+            texture,
+            video.videoWidth,
+            video.videoHeight,
+            screenAspect,
+            cfg.fit ?? 'contain',
+            cfg.rotationDeg ?? 0
+          );
+
+          applyManualTextureAdjust(texture, cfg);
+
+          console.log(
+            `[TV ${tvId}] metadata`,
+            `video=${video.videoWidth}x${video.videoHeight}`,
+            `rotation=${cfg.rotationDeg ?? 0}`,
+            `fit=${cfg.fit ?? 'contain'}`
+          );
+        });
+
+        video.addEventListener('loadeddata', () => {
+          console.log(`[TV ${tvId}] video loaded:`, videoPath);
+        });
+
+        video.addEventListener('error', (e) => {
+          console.error(`[TV ${tvId}] video error:`, videoPath, e);
+        });
+
+        const material = new THREE.MeshBasicMaterial({
+          map: texture,
+          toneMapped: false
+        });
+
+        return { video, texture, material, videoPath };
+      }
+
+      function replaceScreenMaterialByModel(root, modelName, videoMaterial) {
+        const targetName = SCREEN_MATERIAL_BY_MODEL[modelName];
+        if (!targetName) {
+          console.warn(`No screen material mapping for model: ${modelName}`);
+          return 0;
+        }
+
+        const targetLower = targetName.toLowerCase();
+        let replaced = 0;
+
+        root.traverse((child) => {
+          if (!child.isMesh || !child.material) return;
+
+          if (Array.isArray(child.material)) {
+            child.material = child.material.map((mat) => {
+              if (mat && mat.name && mat.name.toLowerCase() === targetLower) {
+                replaced++;
+                return videoMaterial;
+              }
+              return mat;
+            });
+          } else {
+            if (child.material.name && child.material.name.toLowerCase() === targetLower) {
+              replaced++;
+              child.material = videoMaterial;
+            }
+          }
+        });
+
+        return replaced;
+      }
+
+      function turnOnTV(tvEntry) {
+        if (!tvEntry) return;
+
+        tvEntry.autoOffAt = performance.now() + TV_AUTO_OFF_MS;
+
+        if (tvEntry.isOn) return;
+
+        console.log(`Turning ON TV: ${tvEntry.id}`, tvEntry.videoPath);
+
+        tvEntry.video.load();
+        tvEntry.video.currentTime = 0;
+
+        tvEntry.video.play().then(() => {
+          console.log(`Playing TV: ${tvEntry.id}`);
+        }).catch((err) => {
+          console.warn(`Video play failed for ${tvEntry.id}:`, err);
+        });
+
+        tvEntry.isOn = true;
+      }
+
+      function turnOffTV(tvEntry) {
+        if (!tvEntry || !tvEntry.isOn) return;
+        tvEntry.video.pause();
+        tvEntry.video.currentTime = 0;
+        tvEntry.isOn = false;
+        tvEntry.autoOffAt = 0;
+      }
+
+      function toggleTV(tvEntry) {
+        if (!tvEntry) return;
+        if (tvEntry.isOn) turnOffTV(tvEntry);
+        else turnOnTV(tvEntry);
+      }
+
+      function getClosestLookedAtTV() {
+        const origin = camera.position.clone();
+        const forward = new THREE.Vector3();
+        camera.getWorldDirection(forward);
+
+        let best = null;
+        let bestScore = -Infinity;
+
+        for (const tv of tvInteractables) {
+          const targetPos = new THREE.Vector3();
+          tv.wrapper.getWorldPosition(targetPos);
+
+          // Aim a little higher than the base so looking at the screen works better
+          targetPos.y += 1.6;
+
+          const toTV = targetPos.clone().sub(origin);
+          const dist = toTV.length();
+          if (dist > INTERACT_DISTANCE) continue;
+
+          toTV.normalize();
+          const dot = forward.dot(toTV);
+
+          // lower threshold than 0.94 so interaction is easier
+          if (dot > 0.88) {
+            // mix aim + distance so closest centered TV wins
+            const score = dot - dist * 0.01;
+            if (score > bestScore) {
+              bestScore = score;
+              best = tv;
+            }
+          }
+        }
+
+        return best;
+      }
+
+      function fitTextureToMaterial(texture, mediaWidth, mediaHeight, mode = 'cover') {
+        if (!mediaWidth || !mediaHeight) return;
+
+        // screen area assumed to be 1:1 unless your UVs already define the shape
+        // you can override screenAspect per model if needed
+        const videoAspect = mediaWidth / mediaHeight;
+
+        // For most CRT screens, a 4:3 target works better than 1:1
+        const screenAspect = 4 / 3;
+
+        texture.center.set(0.5, 0.5);
+        texture.rotation = 0;
+
+        if (mode === 'contain') {
+          if (videoAspect > screenAspect) {
+            texture.repeat.set(1, videoAspect / screenAspect);
+          } else {
+            texture.repeat.set(screenAspect / videoAspect, 1);
+          }
+        } else {
+          // cover = fill screen, crop overflow
+          if (videoAspect > screenAspect) {
+            texture.repeat.set(screenAspect / videoAspect, 1);
+          } else {
+            texture.repeat.set(1, videoAspect / screenAspect);
+          }
+        }
+
+        texture.offset.set(
+          (1 - texture.repeat.x) * 0.5,
+          (1 - texture.repeat.y) * 0.5
+        );
+
+        texture.needsUpdate = true;
+      }
+
+      function updateTVInteraction() {
+        hoveredTV = controls.isLocked ? getClosestLookedAtTV() : null;
+
+        if (hoveredTV) {
+          const state = hoveredTV.isOn ? 'TURN OFF' : 'TURN ON';
+          hint.textContent = `WASD · MOUSE LOOK · SHIFT SPRINT · SPACE JUMP · [E] ${state} ${hoveredTV.id}`;
+        } else {
+          hint.textContent = 'WASD · MOUSE LOOK · SHIFT SPRINT · SPACE JUMP · E INTERACT';
+        }
+      }
+
+      function updateTVAutoOff(now) {
+        for (const tv of tvInteractables) {
+          if (tv.isOn && tv.autoOffAt > 0 && now >= tv.autoOffAt) {
+            turnOffTV(tv);
+          }
+        }
+      }
+
+      function stopAllTVs() {
+        for (const tv of tvInteractables) {
+          turnOffTV(tv);
+        }
+      }
+
+      function disposeTVSystem() {
+        for (const tv of tvInteractables) {
+          turnOffTV(tv);
+          tv.texture.dispose();
+          tv.material.dispose();
+          tv.video.removeAttribute('src');
+          tv.video.load();
+        }
+      }
+
       // ── World layout ────────────────────────────────────────────────────────────
       const START_POINT = new THREE.Vector3(0, 0, 8);
 
       const wood_crt = {
         tvs: [
-          { model: 'wood_crt', x: 211, y: 0, z: 205, ry: THREE.MathUtils.degToRad(176), scale: 3.0 },
-          { model: 'wood_crt', x: 236, y: 0, z: 214, ry: THREE.MathUtils.degToRad(160), scale: 3.0 },
-          { model: 'wood_crt', x: 221, y: 0, z: 237, ry: THREE.MathUtils.degToRad(24), scale: 3.0 },
+          { id: 'wood_1', model: 'wood_crt', x: 211, y: 0, z: 205, ry: THREE.MathUtils.degToRad(176), scale: 3.0 },
+          { id: 'wood_2', model: 'wood_crt', x: 236, y: 0, z: 214, ry: THREE.MathUtils.degToRad(160), scale: 3.0 },
+          { id: 'wood_3', model: 'wood_crt', x: 221, y: 0, z: 237, ry: THREE.MathUtils.degToRad(24), scale: 3.0 },
         ],
         trees: [
           { model: 'dead_tree', x: 220, y: -0.1, z: 202, ry: THREE.MathUtils.degToRad(0), scale: 2.0 },
@@ -131,9 +499,9 @@
 
       const plastic_crt = {
         tvs: [
-          { model: 'plastic_crt', x: 50, y: 0, z: 270, ry: THREE.MathUtils.degToRad(102), scale: 3.0 },
-          { model: 'plastic_crt', x: 60, y: 0, z: 250, ry: THREE.MathUtils.degToRad(158), scale: 3.0 },
-          { model: 'plastic_crt', x: 49, y: 0, z: 288, ry: THREE.MathUtils.degToRad(10), scale: 3.0 },
+          { id: 'plastic_1', model: 'plastic_crt', x: 50, y: 0, z: 270, ry: THREE.MathUtils.degToRad(102), scale: 3.0 },
+          { id: 'plastic_2', model: 'plastic_crt', x: 60, y: 0, z: 250, ry: THREE.MathUtils.degToRad(158), scale: 3.0 },
+          { id: 'plastic_3', model: 'plastic_crt', x: 49, y: 0, z: 288, ry: THREE.MathUtils.degToRad(10), scale: 3.0 },
         ],
         trees: [
           { model: 'pine_tree_yellow', x: 50, y: 0, z: 252, ry: THREE.MathUtils.degToRad(0), scale: 1.7 },
@@ -146,9 +514,9 @@
 
       const old_crt_grey = {
         tvs: [
-          { model: 'old_crt_grey', x: -118, y: 0, z: 246, ry: THREE.MathUtils.degToRad(290), scale: 3.0 },
-          { model: 'old_crt_grey', x: -98, y: 0, z: 250, ry: THREE.MathUtils.degToRad(30), scale: 3.0 },
-          { model: 'old_crt_grey', x: -94, y: 0, z: 231, ry: THREE.MathUtils.degToRad(130), scale: 3.0 },
+          { id: 'grey_1', model: 'old_crt_grey', x: -118, y: 0, z: 246, ry: THREE.MathUtils.degToRad(290), scale: 3.0 },
+          { id: 'grey_2', model: 'old_crt_grey', x: -98, y: 0, z: 250, ry: THREE.MathUtils.degToRad(30), scale: 3.0 },
+          { id: 'grey_3', model: 'old_crt_grey', x: -94, y: 0, z: 231, ry: THREE.MathUtils.degToRad(130), scale: 3.0 },
         ],
         trees: [
           { model: 'ico_tree_yellow', x: -110, y: -0.5, z: 233, ry: THREE.MathUtils.degToRad(0), scale: 1.5 },
@@ -161,9 +529,9 @@
 
       const oled_silver = {
         tvs: [
-          { model: 'oled_silver', x: -168, y: 0, z: 137, ry: THREE.MathUtils.degToRad(316), scale: 3.0 },
-          { model: 'oled_silver', x: -142, y: 0, z: 117, ry: THREE.MathUtils.degToRad(110), scale: 3.0 },
-          { model: 'oled_silver', x: -172, y: 0, z: 103, ry: THREE.MathUtils.degToRad(232), scale: 3.0 },
+          { id: 'silver_1', model: 'oled_silver', x: -168, y: 0, z: 137, ry: THREE.MathUtils.degToRad(316), scale: 3.0 },
+          { id: 'silver_2', model: 'oled_silver', x: -142, y: 0, z: 117, ry: THREE.MathUtils.degToRad(110), scale: 3.0 },
+          { id: 'silver_3', model: 'oled_silver', x: -172, y: 0, z: 103, ry: THREE.MathUtils.degToRad(232), scale: 3.0 },
         ],
         trees: [
           { model: 'pine_tree', x: -162, y: 0, z: 97, ry: THREE.MathUtils.degToRad(0), scale: 1.7 },
@@ -176,9 +544,9 @@
 
       const oled_black = {
         tvs: [
-          { model: 'oled_black', x: -100, y: 0, z: -10, ry: THREE.MathUtils.degToRad(70), scale: 3.0 },
-          { model: 'oled_black', x: -112, y: 0, z: -25, ry: THREE.MathUtils.degToRad(200), scale: 3.0 },
-          { model: 'oled_black', x: -123, y: 0, z: -15, ry: THREE.MathUtils.degToRad(265), scale: 3.0 },
+          { id: 'black_1', model: 'oled_black', x: -100, y: 0, z: -10, ry: THREE.MathUtils.degToRad(70), scale: 3.0 },
+          { id: 'black_2', model: 'oled_black', x: -112, y: 0, z: -25, ry: THREE.MathUtils.degToRad(200), scale: 3.0 },
+          { id: 'black_3', model: 'oled_black', x: -123, y: 0, z: -15, ry: THREE.MathUtils.degToRad(265), scale: 3.0 },
         ],
         trees: [
           { model: 'ico_tree', x: -108, y: 0, z: -28, ry: THREE.MathUtils.degToRad(0), scale: 1.5 },
@@ -211,7 +579,13 @@
       }
 
       function mirrorGroup(group) {
-        const mirror = (e) => ({ ...e, x: -e.x, z: -e.z, ry: (e.ry ?? 0) + Math.PI });
+        const mirror = (e) => ({
+          ...e,
+          id: e.id ? `${e.id.replace(/_\d+$/, '')}_m${(e.id.match(/(\d+)$/) || [, ''])[1]}` : undefined,
+          x: -e.x,
+          z: -e.z,
+          ry: (e.ry ?? 0) + Math.PI
+        });
         return { tvs: group.tvs.map(mirror), trees: group.trees.map(mirror) };
       }
 
@@ -264,7 +638,6 @@
       const PATH_GROUPS_BASE = [oled_black, oled_silver, old_crt_grey, plastic_crt, wood_crt];
       const PATH_GROUPS_MIRROR = PATH_GROUPS_BASE.map(mirrorGroup);
 
-      // Both sides use the same segment model progression
       const PATH_SEGMENT_MODELS = [
         ['ico_tree', 'ico_tree2', 'ico_tree3', 'pine_tree', 'pine_tree2', 'pine_tree3'],
         ['pine_tree', 'pine_tree2', 'pine_tree3', 'ico_tree_yellow', 'ico_tree_yellow2', 'ico_tree_yellow3'],
@@ -302,13 +675,23 @@
             let chosenPos = null;
             for (const offset of offsets) {
               const testPos = p.clone().addScaledVector(normal, offset);
-              if (isPathTreePositionClear(testPos.x, testPos.z, protectedPoints)) { chosenPos = testPos; break; }
+              if (isPathTreePositionClear(testPos.x, testPos.z, protectedPoints)) {
+                chosenPos = testPos;
+                break;
+              }
             }
 
             if (!chosenPos) continue;
 
             const model = models[i % models.length];
-            result.push({ model, x: chosenPos.x, y: treeYOffsetFor(model), z: chosenPos.z, ry: Math.atan2(tangent.x, tangent.z), scale: treeScaleFor(model) });
+            result.push({
+              model,
+              x: chosenPos.x,
+              y: treeYOffsetFor(model),
+              z: chosenPos.z,
+              ry: Math.atan2(tangent.x, tangent.z),
+              scale: treeScaleFor(model)
+            });
           }
         }
 
@@ -325,7 +708,9 @@
       }
       for (const tree of PATH_TREES) tree.scale = treeScaleFor(tree.model);
 
-      function addTreeTrunkCylinder(x, z, radius = 0.55) { treeTrunkColliders.push({ x, z, radius }); }
+      function addTreeTrunkCylinder(x, z, radius = 0.55) {
+        treeTrunkColliders.push({ x, z, radius });
+      }
 
       function collidesAtPosition(position) {
         const playerBox = new THREE.Box3(
@@ -333,8 +718,10 @@
           new THREE.Vector3(position.x + PLAYER_RADIUS, position.y, position.z + PLAYER_RADIUS)
         );
         if (colliders.some((box) => playerBox.intersectsBox(box))) return true;
+
         return treeTrunkColliders.some((trunk) => {
-          const dx = position.x - trunk.x, dz = position.z - trunk.z;
+          const dx = position.x - trunk.x;
+          const dz = position.z - trunk.z;
           return (dx * dx + dz * dz) < ((PLAYER_RADIUS + trunk.radius) ** 2);
         });
       }
@@ -366,24 +753,34 @@
       }
 
       function addPlacementMarkers() {
-        TV_GROUPS.forEach((group, groupIndex) => {
-          group.tvs.forEach((entry, tvIndex) => {
+        TV_GROUPS.forEach((group) => {
+          group.tvs.forEach((entry) => {
             const { x = 0, y = 0, z = 0 } = entry;
 
-            const marker = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.9, 0.9), new THREE.MeshBasicMaterial({ color: 0xff0000 }));
+            const marker = new THREE.Mesh(
+              new THREE.BoxGeometry(0.9, 0.9, 0.9),
+              new THREE.MeshBasicMaterial({ color: 0xff0000 })
+            );
             marker.position.set(x, y + 0.45, z);
             scene.add(marker);
 
-            const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 2.5, 8), new THREE.MeshBasicMaterial({ color: 0xffff00 }));
+            const pole = new THREE.Mesh(
+              new THREE.CylinderGeometry(0.05, 0.05, 2.5, 8),
+              new THREE.MeshBasicMaterial({ color: 0xffff00 })
+            );
             pole.position.set(x, y + 1.25, z);
             scene.add(pole);
 
-            const ring = new THREE.Mesh(new THREE.TorusGeometry(0.7, 0.06, 8, 24), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+            const ring = new THREE.Mesh(
+              new THREE.TorusGeometry(0.7, 0.06, 8, 24),
+              new THREE.MeshBasicMaterial({ color: 0xffffff })
+            );
             ring.rotation.x = Math.PI / 2;
             ring.position.set(x, y + 0.03, z);
             scene.add(ring);
 
-            // const label = makeTextSprite(`${groupIndex}.${tvIndex}: ${entry.model} (${x}, ${y}, ${z})`, { fontSize: 26, padding: 10 });
+            // Uncomment if you want labels above each TV
+            // const label = makeTextSprite(entry.id, { fontSize: 26, padding: 10 });
             // label.position.set(x, y + 3.0, z);
             // scene.add(label);
           });
@@ -398,8 +795,11 @@
       const TREE_BASE_PATH = '../assets/trees/';
 
       const modelManifest = {
-        wood_crt: 'wood_crt.glb', plastic_crt: 'plastic_crt.glb',
-        old_crt_grey: 'old_crt_grey.glb', oled_silver: 'oled_silver.glb', oled_black: 'oled_black.glb',
+        wood_crt: 'wood_crt.glb',
+        plastic_crt: 'plastic_crt.glb',
+        old_crt_grey: 'old_crt_grey.glb',
+        oled_silver: 'oled_silver.glb',
+        oled_black: 'oled_black.glb',
       };
 
       const treeManifest = {
@@ -439,7 +839,6 @@
         modelRoot.position.y -= box.min.y;
       }
 
-      // Shared helper: clone, center/ground, and place a model into the scene
       function placeModel(source, entry, { doubleSided = false, isTV = false } = {}) {
         const wrapper = new THREE.Group();
         wrapper.position.set(entry.x ?? 0, entry.y ?? 0, entry.z ?? 0);
@@ -462,16 +861,65 @@
 
         wrapper.add(instance);
         scene.add(wrapper);
-        return wrapper;
+        return { wrapper, instance };
       }
 
       function addModelPlacements() {
         TV_GROUPS.forEach((group, gi) => {
           group.tvs.forEach((entry, ti) => {
             const source = tvModels[entry.model];
-            if (!source) { console.warn(`Missing TV model for group ${gi}, tv ${ti}: ${entry.model}`); return; }
-            const wrapper = placeModel(source, entry, { doubleSided: true, isTV: true });
+            if (!source) {
+              console.warn(`Missing TV model for group ${gi}, tv ${ti}: ${entry.model}`);
+              return;
+            }
+
+            const { wrapper, instance } = placeModel(source, entry, { doubleSided: true, isTV: true });
             addColliderFromObject(wrapper, 0.3);
+
+            const videoConfig = TV_VIDEO_BY_ID[entry.id];
+            if (!videoConfig) {
+              console.warn(`No video assigned for TV id: ${entry.id}`);
+              return;
+            }
+
+            const { video, texture, material, videoPath } = createVideoMaterial(videoConfig, entry.id, entry.model);
+            const replaced = replaceScreenMaterialByModel(instance, entry.model, material);
+
+            console.log(`TV ${entry.id} | model=${entry.model} | video=${videoPath} | replacedMaterials=${replaced}`);
+
+            if (replaced <= 0) {
+              console.warn(
+                `No matching screen material found on ${entry.model} (${entry.id}). Expected: ${SCREEN_MATERIAL_BY_MODEL[entry.model]}`
+              );
+
+              // Debug: print all material names on this TV model
+              instance.traverse((child) => {
+                if (!child.isMesh || !child.material) return;
+                if (Array.isArray(child.material)) {
+                  child.material.forEach((mat) => {
+                    if (mat) console.log(`[${entry.id}] material:`, mat.name);
+                  });
+                } else {
+                  console.log(`[${entry.id}] material:`, child.material.name);
+                }
+              });
+            }
+
+            const tvEntry = {
+              id: entry.id,
+              model: entry.model,
+              wrapper,
+              instance,
+              videoPath,
+              video,
+              texture,
+              material,
+              isOn: false,
+              autoOffAt: 0,
+            };
+
+            wrapper.userData.tvEntry = tvEntry;
+            tvInteractables.push(tvEntry);
           });
         });
       }
@@ -479,7 +927,10 @@
       function addTreePlacements(entries, modelBank) {
         for (const entry of entries) {
           const source = modelBank[entry.model];
-          if (!source) { console.warn(`Missing tree model: ${entry.model}`); continue; }
+          if (!source) {
+            console.warn(`Missing tree model: ${entry.model}`);
+            continue;
+          }
           placeModel(source, entry);
           addTreeTrunkCylinder(entry.x, entry.z, 0.55);
         }
@@ -503,11 +954,10 @@
         addTreePlacements(TV_GROUPS.flatMap((g) => g.trees), treeModels);
         addTreePlacements(PATH_TREES, treeModels);
 
-        setPanel(
-          `Ready\n\nCurrent model path:\n${MODEL_BASE_PATH}\n\nLoaded models:\n` +
-          Object.keys(modelManifest).map((k) => `- ${k}: ${tvModels[k] ? 'ok' : 'missing'}`).join('\n') +
-          `\n\nTV box colliders: ${colliders.length}\nTree trunk colliders: ${treeTrunkColliders.length}`
+        setHudInfo(
+          `Ready | TV Colliders: ${colliders.length} | Tree Trunks: ${treeTrunkColliders.length} | TVs: ${tvInteractables.length}`
         );
+        updatePanelText();
       }
 
       loadAllModels();
@@ -531,8 +981,12 @@
 
       controls.addEventListener('unlock', () => {
         overlay.style.display = 'flex';
+        stopAllTVs();
       });
 
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) stopAllTVs();
+      });
 
       let verticalVelocity = 0;
       let isOnGround = true;
@@ -540,12 +994,27 @@
 
       document.addEventListener('keydown', (e) => {
         keys[e.code] = true;
+
         if (e.code === 'Space') {
           e.preventDefault();
-          if (controls.isLocked && isOnGround) { verticalVelocity = JUMP_VELOCITY; isOnGround = false; }
+          if (controls.isLocked && isOnGround) {
+            verticalVelocity = JUMP_VELOCITY;
+            isOnGround = false;
+          }
+        }
+
+        if (e.code === 'KeyE' && controls.isLocked) {
+          const tv = getClosestLookedAtTV();
+          if (tv) {
+            toggleTV(tv);
+            updatePanelText();
+          }
         }
       });
-      document.addEventListener('keyup', (e) => { keys[e.code] = false; });
+
+      document.addEventListener('keyup', (e) => {
+        keys[e.code] = false;
+      });
 
       // ── Animate ─────────────────────────────────────────────────────────────────
       const _moveDir = new THREE.Vector3();
@@ -563,7 +1032,10 @@
           camera.getWorldDirection(fwd);
           let lookDeg = THREE.MathUtils.radToDeg(Math.atan2(fwd.x, fwd.z));
           if (lookDeg < 0) lookDeg += 360;
-          panel.textContent = `FPS: ${frames} | X: ${camera.position.x.toFixed(2)} | Y: ${camera.position.y.toFixed(2)} | Z: ${camera.position.z.toFixed(2)} | Angle: ${lookDeg.toFixed(1)}°`;
+
+          setHudInfo(
+            `FPS: ${frames} | X: ${camera.position.x.toFixed(2)} | Y: ${camera.position.y.toFixed(2)} | Z: ${camera.position.z.toFixed(2)} | Angle: ${lookDeg.toFixed(1)}°`
+          );
           frames = 0;
           lastFpsTime = nowFps;
         }
@@ -572,9 +1044,12 @@
         const delta = Math.min((now - prev) / 1000, 0.1);
         prev = now;
 
+        updateTVAutoOff(now);
+
         if (controls.isLocked) {
           const speed = (keys['ShiftLeft'] || keys['ShiftRight']) ? 25 : 15;
           _moveDir.set(0, 0, 0);
+
           if (keys['KeyW'] || keys['ArrowUp']) _moveDir.z -= 1;
           if (keys['KeyS'] || keys['ArrowDown']) _moveDir.z += 1;
           if (keys['KeyA'] || keys['ArrowLeft']) _moveDir.x -= 1;
@@ -582,6 +1057,7 @@
 
           if (_moveDir.lengthSq() > 0) {
             _moveDir.normalize();
+
             const moveAmountForward = -_moveDir.z * speed * delta;
             const moveAmountRight = _moveDir.x * speed * delta;
 
@@ -610,6 +1086,8 @@
           }
         }
 
+        updateTVInteraction();
+        updatePanelText();
         renderer.render(scene, camera);
       }
 
@@ -618,6 +1096,8 @@
       setInterval(() => {
         console.log('Triangles:', renderer.info.render.triangles, 'Draw calls:', renderer.info.render.calls);
       }, 1000);
+
+      window.addEventListener('beforeunload', disposeTVSystem);
 
       window.addEventListener('resize', () => {
         camera.aspect = window.innerWidth / window.innerHeight;
