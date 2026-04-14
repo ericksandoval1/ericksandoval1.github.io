@@ -118,47 +118,34 @@
       const TV_AUTO_OFF_MS = 30000;
 
       // Assign one video per exact TV id
+
       const TV_VIDEO_BY_ID = {
-        wood_1: {
-          src: '../assets/videos/looney_tunes.mp4',
-          rotationDeg: 0,
-          fit: 'contain',
-          repeatX: 0.92,
-          repeatY: 0.92,
-          offsetX: 0.04,
-          offsetY: 0.04,
-        },
-        wood_2: {
-          src: '../assets/videos/fullhouse.mp4',
-          rotationDeg: 90,
-          fit: 'contain',
-          repeatX: 0.82,
-          repeatY: 0.82,
-          offsetX: 0.09,
-          offsetY: 0.09,
-        },
-        wood_3: {
-          src: '../assets/videos/courage.mp4',
-          rotationDeg: 0,
-          fit: 'contain',
-          repeatX: 0.90,
-          repeatY: 0.90,
-          offsetX: 0.05,
-          offsetY: 0.05,
-        },
+        wood_1: { src: '../assets/videos/looney_tunes.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
+        wood_2: { src: '../assets/videos/fullhouse.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
+        wood_3: { src: '../assets/videos/courage.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
 
-        plastic_1: { src: '../assets/videos/spongebob_bowl.mp4', rotationDeg: 0, fit: 'cover', repeatX: 1, repeatY: 1, offsetX: 0, offsetY: 0 },
-        plastic_2: { src: '../assets/videos/spongebob_dutchman.mp4', rotationDeg: 0, fit: 'cover', repeatX: 1, repeatY: 1, offsetX: 0, offsetY: 0 },
-        plastic_3: { src: '../assets/videos/fosters.mp4', rotationDeg: 0, fit: 'cover', repeatX: 1, repeatY: 1, offsetX: 0, offsetY: 0 },
+        wood_m1: { src: '../assets/videos/looney_tunes.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
+        wood_m2: { src: '../assets/videos/fullhouse.mp4', rotationDeg: 90, fit: 'contain', uvZoom: 1.0 },
+        wood_m3: { src: '../assets/videos/courage.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
+
+        plastic_1: { src: '../assets/videos/spongebob_bowl.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
+        plastic_2: { src: '../assets/videos/spongebob_dutchman.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
+        plastic_3: { src: '../assets/videos/fosters.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
+
+        plastic_m1: { src: '../assets/videos/spongebob_bowl.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
+        plastic_m2: { src: '../assets/videos/spongebob_dutchman.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
+        plastic_m3: { src: '../assets/videos/fosters.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
       };
-
       // Exact screen material name from Blender for each TV model
       const SCREEN_MATERIAL_BY_MODEL = {
         oled_black: 'TVScreen_oled',
         oled_silver: 'darkgrey_oled',
         plastic_crt: 'TVScreen_black_crt',
-        wood_crt: 'TVScreen',
+        // wood_crt: 'TVScreen',
         old_crt_grey: 'greycrt',
+
+        // temporary test model
+        black_oled1: 'oled_screen', // change this if your Blender material has a different exact name
       };
 
       const tvInteractables = [];
@@ -185,27 +172,23 @@
       }
 
       function getScreenAspectForModel(modelName) {
-        // tweak these if needed
         switch (modelName) {
-          case 'wood_crt': return 4 / 3;
+          // case 'wood_crt': return 4 / 3;
           case 'plastic_crt': return 4 / 3;
           case 'old_crt_grey': return 4 / 3;
           case 'oled_silver': return 16 / 9;
           case 'oled_black': return 16 / 9;
+          case 'black_oled1': return 16 / 9;
           default: return 4 / 3;
         }
       }
 
-      function applyVideoTextureFit(texture, videoWidth, videoHeight, screenAspect, fit = 'contain', rotationDeg = 0) {
+      function applyVideoTextureFit(texture, videoWidth, videoHeight, screenAspect, fit = 'contain', rotationDeg = 0, uvZoom = 1.0) {
         if (!videoWidth || !videoHeight) return;
 
         let mediaAspect = videoWidth / videoHeight;
         const rot = ((rotationDeg % 360) + 360) % 360;
-
-        // if rotated 90 or 270, swap aspect
-        if (rot === 90 || rot === 270) {
-          mediaAspect = videoHeight / videoWidth;
-        }
+        if (rot === 90 || rot === 270) mediaAspect = videoHeight / videoWidth;
 
         texture.center.set(0.5, 0.5);
         texture.rotation = THREE.MathUtils.degToRad(rotationDeg);
@@ -214,40 +197,22 @@
         let repeatY = 1;
 
         if (fit === 'cover') {
-          if (mediaAspect > screenAspect) {
-            repeatX = screenAspect / mediaAspect;
-            repeatY = 1;
-          } else {
-            repeatX = 1;
-            repeatY = mediaAspect / screenAspect;
-          }
+          if (mediaAspect > screenAspect) { repeatX = screenAspect / mediaAspect; repeatY = 1; }
+          else { repeatX = 1; repeatY = mediaAspect / screenAspect; }
         } else {
-          // contain
-          if (mediaAspect > screenAspect) {
-            repeatX = 1;
-            repeatY = screenAspect / mediaAspect;
-          } else {
-            repeatX = mediaAspect / screenAspect;
-            repeatY = 1;
-          }
+          if (mediaAspect > screenAspect) { repeatX = 1; repeatY = screenAspect / mediaAspect; }
+          else { repeatX = mediaAspect / screenAspect; repeatY = 1; }
         }
+
+        repeatX *= uvZoom;
+        repeatY *= uvZoom;
 
         texture.repeat.set(repeatX, repeatY);
         texture.offset.set((1 - repeatX) * 0.5, (1 - repeatY) * 0.5);
         texture.needsUpdate = true;
       }
 
-      function applyManualTextureAdjust(texture, cfg = {}) {
-        const repeatX = cfg.repeatX ?? 1.0;
-        const repeatY = cfg.repeatY ?? 1.0;
-        const offsetX = cfg.offsetX ?? 0.0;
-        const offsetY = cfg.offsetY ?? 0.0;
 
-        texture.repeat.multiply(new THREE.Vector2(repeatX, repeatY));
-        texture.offset.x += offsetX;
-        texture.offset.y += offsetY;
-        texture.needsUpdate = true;
-      }
 
       function createVideoMaterial(videoConfig, tvId, modelName) {
         const videoPath = typeof videoConfig === 'string' ? videoConfig : videoConfig.src;
@@ -269,23 +234,14 @@
 
         video.addEventListener('loadedmetadata', () => {
           const screenAspect = getScreenAspectForModel(modelName);
-
           applyVideoTextureFit(
             texture,
             video.videoWidth,
             video.videoHeight,
             screenAspect,
             cfg.fit ?? 'contain',
-            cfg.rotationDeg ?? 0
-          );
-
-          applyManualTextureAdjust(texture, cfg);
-
-          console.log(
-            `[TV ${tvId}] metadata`,
-            `video=${video.videoWidth}x${video.videoHeight}`,
-            `rotation=${cfg.rotationDeg ?? 0}`,
-            `fit=${cfg.fit ?? 'contain'}`
+            cfg.rotationDeg ?? 0,
+            cfg.uvZoom ?? 1.0   // ← now actually passed in
           );
         });
 
@@ -480,13 +436,13 @@
       }
 
       // ── World layout ────────────────────────────────────────────────────────────
-      const START_POINT = new THREE.Vector3(0, 0, 8);
+      const START_POINT = new THREE.Vector3(200, 0, 200);
 
       const wood_crt = {
         tvs: [
-          { id: 'wood_1', model: 'wood_crt', x: 211, y: 0, z: 205, ry: THREE.MathUtils.degToRad(176), scale: 3.0 },
-          { id: 'wood_2', model: 'wood_crt', x: 236, y: 0, z: 214, ry: THREE.MathUtils.degToRad(160), scale: 3.0 },
-          { id: 'wood_3', model: 'wood_crt', x: 221, y: 0, z: 237, ry: THREE.MathUtils.degToRad(24), scale: 3.0 },
+          { id: 'wood_1', model: 'black_oled1', x: 211, y: 0, z: 205, ry: THREE.MathUtils.degToRad(176), scale: 4.0 },
+          { id: 'wood_2', model: 'black_oled1', x: 236, y: 0, z: 214, ry: THREE.MathUtils.degToRad(160), scale: 4.0 },
+          { id: 'wood_3', model: 'black_oled1', x: 221, y: 0, z: 237, ry: THREE.MathUtils.degToRad(24), scale: 4.0 },
         ],
         trees: [
           { model: 'dead_tree', x: 220, y: -0.1, z: 202, ry: THREE.MathUtils.degToRad(0), scale: 2.0 },
@@ -642,7 +598,7 @@
         ['ico_tree', 'ico_tree2', 'ico_tree3', 'pine_tree', 'pine_tree2', 'pine_tree3'],
         ['pine_tree', 'pine_tree2', 'pine_tree3', 'ico_tree_yellow', 'ico_tree_yellow2', 'ico_tree_yellow3'],
         ['ico_tree_yellow', 'ico_tree_yellow2', 'ico_tree_yellow3', 'ico_tree_orange', 'ico_tree_orange2', 'ico_tree_orange3', 'pine_tree_orange', 'pine_tree_orange2', 'pine_tree_orange3'],
-        ['pine_tree_orange', 'pine_tree_orange2', 'pine_tree_orange3', 'ico_tree_orange', 'ico_tree_orange2', 'ico_tree_orange3', 'pine_tree_orange', 'ico_tree_orange', 'pine_tree_orange2', 'ico_tree_orange2', 'dead_tree', 'dead_tree1', 'dead_tree2', 'dead_tree3', 'dead_tree4', 'dead_tree5', 'dead_tree', 'dead_tree2', 'dead_tree4'],
+        ['pine_tree_orange', 'pine_tree_orange2', 'pine_tree_orange3', 'ico_tree_orange', 'ico_tree_orange2', 'ico_tree_orange3', 'pine_tree_orange', 'ico_tree_orange', 'pine_tree_orange2', 'ico_tree_orange2', 'dead_tree', 'dead_tree2', 'dead_tree3', 'dead_tree4', 'dead_tree5', 'dead_tree', 'dead_tree2', 'dead_tree4'],
       ];
 
       function buildPathTreesAlongCenters(centerGroups, segmentModelLists, options = {}) {
@@ -795,7 +751,9 @@
       const TREE_BASE_PATH = '../assets/trees/';
 
       const modelManifest = {
-        wood_crt: 'wood_crt.glb',
+        // wood_crt: 'wood_crt.glb',
+        black_oled1: 'black_oled1.glb',
+
         plastic_crt: 'plastic_crt.glb',
         old_crt_grey: 'old_crt_grey.glb',
         oled_silver: 'oled_silver.glb',
@@ -809,7 +767,7 @@
         pine_tree_yellow: 'pine_tree_yellow.glb', pine_tree_yellow2: 'pine_tree_yellow2.glb', pine_tree_yellow3: 'pine_tree_yellow3.glb', pine_tree_yellow4: 'pine_tree_yellow4.glb',
         ico_tree_yellow: 'ico_tree_yellow.glb', ico_tree_yellow2: 'ico_tree_yellow2.glb', ico_tree_yellow3: 'ico_tree_yellow3.glb',
         pine_tree_orange: 'pine_tree_orange.glb', pine_tree_orange2: 'pine_tree_orange2.glb', pine_tree_orange3: 'pine_tree_orange3.glb', pine_tree_orange4: 'pine_tree_orange4.glb',
-        dead_tree: 'dead_tree.glb', dead_tree1: 'dead_tree1.glb', dead_tree2: 'dead_tree2.glb',
+        dead_tree: 'dead_tree.glb', dead_tree2: 'dead_tree2.glb',
         dead_tree3: 'dead_tree3.glb', dead_tree4: 'dead_tree4.glb', dead_tree5: 'dead_tree5.glb',
       };
 
