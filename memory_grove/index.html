@@ -120,50 +120,50 @@
       // Assign one video per exact TV id
 
       const TV_VIDEO_BY_ID = {
-        // dead tree area -> crt_tvgrey
-        wood_1: { src: '../assets/videos/teentitans.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
-        wood_2: { src: '../assets/videos/fullhouse.mp4', rotationDeg: 90, fit: 'contain', uvZoom: 1.0 },
-        wood_3: { src: '../assets/videos/courage.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
+        // ── dead tree area (crt_tvgrey) ──
+        wood_1: { src: '../assets/videos/teentitans.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 0.95, offsetX: 0.0, offsetY: 0.0 },
+        wood_2: { src: '../assets/videos/fullhouse.mp4', rotationDeg: 90, fit: 'contain', uvZoom: 1.0, offsetX: 0.0, offsetY: 0.0 },
+        wood_3: { src: '../assets/videos/courage.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 0.9, offsetX: 0.02, offsetY: 0.0 },
 
-        wood_m1: { src: '../assets/videos/teentitans.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
-        wood_m2: { src: '../assets/videos/fullhouse.mp4', rotationDeg: 90, fit: 'contain', uvZoom: 1.0 },
-        wood_m3: { src: '../assets/videos/courage.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
+        wood_m1: { src: '../assets/videos/teentitans.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 0.95, offsetX: 0.0, offsetY: 0.0 },
+        wood_m2: { src: '../assets/videos/fullhouse.mp4', rotationDeg: 90, fit: 'contain', uvZoom: 1.0, offsetX: 0.0, offsetY: 0.0 },
+        wood_m3: { src: '../assets/videos/courage.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 0.9, offsetX: 0.02, offsetY: 0.0 },
 
-        // pine tree yellow area -> crt_tv
-        plastic_1: { src: '../assets/videos/spongebob_bowl.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
-        plastic_2: { src: '../assets/videos/spongebob_dutchman.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
-        plastic_3: { src: '../assets/videos/fosters.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
+        // ── pine yellow area (crt_tv) ──
+        plastic_1: { src: '../assets/videos/spongebob_bowl.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.1, offsetX: 0.0, offsetY: -0.02 },
+        plastic_2: { src: '../assets/videos/spongebob_dutchman.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0, offsetX: -0.02, offsetY: 0.0 },
+        plastic_3: { src: '../assets/videos/fosters.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 0.95, offsetX: 0.01, offsetY: 0.01 },
 
-        plastic_m1: { src: '../assets/videos/spongebob_bowl.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
-        plastic_m2: { src: '../assets/videos/spongebob_dutchman.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
-        plastic_m3: { src: '../assets/videos/fosters.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
+        plastic_m1: { src: '../assets/videos/spongebob_bowl.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.1, offsetX: 0.0, offsetY: -0.02 },
+        plastic_m2: { src: '../assets/videos/spongebob_dutchman.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0, offsetX: -0.02, offsetY: 0.0 },
+        plastic_m3: { src: '../assets/videos/fosters.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 0.95, offsetX: 0.01, offsetY: 0.01 },
 
-        // ico yellow area -> crt_tvsilver
-        grey_1: { src: '../assets/videos/spongebob_patrick.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
-        grey_2: { src: '../assets/videos/fairlyoddparents.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
-        grey_3: { src: '../assets/videos/jimmyneutron.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
+        // ── ico yellow area (crt_tvsilver) ──
+        grey_1: { src: '../assets/videos/spongebob_patrick.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.05, offsetX: 0.0, offsetY: 0.0 },
+        grey_2: { src: '../assets/videos/fairlyoddparents.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 0.95, offsetX: 0.0, offsetY: 0.02 },
+        grey_3: { src: '../assets/videos/jimmyneutron.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0, offsetX: -0.01, offsetY: 0.0 },
 
-        grey_m1: { src: '../assets/videos/spongebob_patrick.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
-        grey_m2: { src: '../assets/videos/fairlyoddparents.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
-        grey_m3: { src: '../assets/videos/jimmyneutron.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
+        grey_m1: { src: '../assets/videos/spongebob_patrick.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.05, offsetX: 0.0, offsetY: 0.0 },
+        grey_m2: { src: '../assets/videos/fairlyoddparents.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 0.95, offsetX: 0.0, offsetY: 0.02 },
+        grey_m3: { src: '../assets/videos/jimmyneutron.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0, offsetX: -0.01, offsetY: 0.0 },
 
-        // pine tree area -> silver_oled1
-        silver_1: { src: '../assets/videos/kimpossible.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
-        silver_2: { src: '../assets/videos/atla_agnikai.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
-        silver_3: { src: '../assets/videos/teentitans.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
+        // ── pine area (silver_oled1) ──
+        silver_1: { src: '../assets/videos/kimpossible.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0, offsetX: 0.0, offsetY: 0.3 },
+        silver_2: { src: '../assets/videos/atla_agnikai.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.15, offsetX: 0.07, offsetY: 0.3 },
+        silver_3: { src: '../assets/videos/teentitans.mp4', rotationDeg: 0, fit: 'cover', uvZoom: 1.0, offsetX: 0.0, offsetY: 0.0 },
 
-        silver_m1: { src: '../assets/videos/kimpossible.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
-        silver_m2: { src: '../assets/videos/atla_agnikai.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
-        silver_m3: { src: '../assets/videos/teentitans.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
+        silver_m1: { src: '../assets/videos/kimpossible.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0, offsetX: 0.0, offsetY: 0.3 },
+        silver_m2: { src: '../assets/videos/atla_agnikai.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.15, offsetX: 0.07, offsetY: 0.3 },
+        silver_m3: { src: '../assets/videos/teentitans.mp4', rotationDeg: 0, fit: 'cover', uvZoom: 1.5, offsetX: 0.0, offsetY: 0.5 },
 
-        // ico sphere area -> black_oled1
-        black_1: { src: '../assets/videos/arcane.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
-        black_2: { src: '../assets/videos/andor.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
-        black_3: { src: '../assets/videos/regularshow.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
+        // ── ico sphere area (black_oled1) ──
+        black_1: { src: '../assets/videos/arcane.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.1, offsetX: 0.05, offsetY: 0.2 },
+        black_2: { src: '../assets/videos/andor.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0, offsetX: 0.0, offsetY: 0.0 },
+        black_3: { src: '../assets/videos/regularshow.mp4', rotationDeg: 0, fit: 'cover', uvZoom: 1.01, offsetX: 0.0, offsetY: 0.0 },
 
-        black_m1: { src: '../assets/videos/arcane.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
-        black_m2: { src: '../assets/videos/andor.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
-        black_m3: { src: '../assets/videos/regularshow.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
+        black_m1: { src: '../assets/videos/arcane.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.1, offsetX: 0.05, offsetY: 0.2 },
+        black_m2: { src: '../assets/videos/andor.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0, offsetX: 0.01, offsetY: 0.0 },
+        black_m3: { src: '../assets/videos/regularshow.mp4', rotationDeg: 0, fit: 'cover', uvZoom: 1.01, offsetX: 0.0, offsetY: 0.0 },
       };
 
       // Exact screen material name from Blender for each TV model
@@ -203,18 +203,29 @@
           case 'crt_tv':
           case 'crt_tvgrey':
           case 'crt_tvsilver':
+
             return 4 / 3;
 
           case 'black_oled1':
           case 'silver_oled1':
             return 16 / 9;
 
-          default:
-            return 4 / 3;
+          // default:
+          //   return 4 / 3;
         }
       }
 
-      function applyVideoTextureFit(texture, videoWidth, videoHeight, screenAspect, fit = 'contain', rotationDeg = 0, uvZoom = 1.0) {
+      function applyVideoTextureFit(
+        texture,
+        videoWidth,
+        videoHeight,
+        screenAspect,
+        fit = 'contain',
+        rotationDeg = 0,
+        uvZoom = 1.0,
+        offsetX = 0.0,
+        offsetY = 0.0
+      ) {
         if (!videoWidth || !videoHeight) return;
 
         let mediaAspect = videoWidth / videoHeight;
@@ -228,18 +239,34 @@
         let repeatY = 1;
 
         if (fit === 'cover') {
-          if (mediaAspect > screenAspect) { repeatX = screenAspect / mediaAspect; repeatY = 1; }
-          else { repeatX = 1; repeatY = mediaAspect / screenAspect; }
+          if (mediaAspect > screenAspect) {
+            repeatX = screenAspect / mediaAspect;
+            repeatY = 1;
+          } else {
+            repeatX = 1;
+            repeatY = mediaAspect / screenAspect;
+          }
         } else {
-          if (mediaAspect > screenAspect) { repeatX = 1; repeatY = screenAspect / mediaAspect; }
-          else { repeatX = mediaAspect / screenAspect; repeatY = 1; }
+          if (mediaAspect > screenAspect) {
+            repeatX = 1;
+            repeatY = screenAspect / mediaAspect;
+          } else {
+            repeatX = mediaAspect / screenAspect;
+            repeatY = 1;
+          }
         }
+
 
         repeatX *= uvZoom;
         repeatY *= uvZoom;
 
         texture.repeat.set(repeatX, repeatY);
-        texture.offset.set((1 - repeatX) * 0.5, (1 - repeatY) * 0.5);
+
+        texture.offset.set(
+          (1 - repeatX) * 0.5 + offsetX,
+          (1 - repeatY) * 0.5 + offsetY
+        );
+
         texture.needsUpdate = true;
       }
 
@@ -272,7 +299,9 @@
             screenAspect,
             cfg.fit ?? 'contain',
             cfg.rotationDeg ?? 0,
-            cfg.uvZoom ?? 1.0
+            cfg.uvZoom ?? 1.0,
+            cfg.offsetX ?? 0.0,
+            cfg.offsetY ?? 0.0
           );
         });
 
@@ -463,7 +492,7 @@
       }
 
       // ── World layout ────────────────────────────────────────────────────────────
-      const START_POINT = new THREE.Vector3(-160, 0, 120);
+      const START_POINT = new THREE.Vector3(-108, 0, 237);
 
       const wood_crt = {
         tvs: [
