@@ -120,14 +120,16 @@
       // Assign one video per exact TV id
 
       const TV_VIDEO_BY_ID = {
-        wood_1: { src: '../assets/videos/looney_tunes.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
-        wood_2: { src: '../assets/videos/fullhouse.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
+        // dead tree area -> crt_tvgrey
+        wood_1: { src: '../assets/videos/teentitans.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
+        wood_2: { src: '../assets/videos/fullhouse.mp4', rotationDeg: 90, fit: 'contain', uvZoom: 1.0 },
         wood_3: { src: '../assets/videos/courage.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
 
-        wood_m1: { src: '../assets/videos/looney_tunes.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
+        wood_m1: { src: '../assets/videos/teentitans.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
         wood_m2: { src: '../assets/videos/fullhouse.mp4', rotationDeg: 90, fit: 'contain', uvZoom: 1.0 },
         wood_m3: { src: '../assets/videos/courage.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
 
+        // pine tree yellow area -> crt_tv
         plastic_1: { src: '../assets/videos/spongebob_bowl.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
         plastic_2: { src: '../assets/videos/spongebob_dutchman.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
         plastic_3: { src: '../assets/videos/fosters.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
@@ -135,17 +137,42 @@
         plastic_m1: { src: '../assets/videos/spongebob_bowl.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
         plastic_m2: { src: '../assets/videos/spongebob_dutchman.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
         plastic_m3: { src: '../assets/videos/fosters.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
+
+        // ico yellow area -> crt_tvsilver
+        grey_1: { src: '../assets/videos/spongebob_patrick.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
+        grey_2: { src: '../assets/videos/fairlyoddparents.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
+        grey_3: { src: '../assets/videos/jimmyneutron.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
+
+        grey_m1: { src: '../assets/videos/spongebob_patrick.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
+        grey_m2: { src: '../assets/videos/fairlyoddparents.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
+        grey_m3: { src: '../assets/videos/jimmyneutron.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
+
+        // pine tree area -> silver_oled1
+        silver_1: { src: '../assets/videos/kimpossible.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
+        silver_2: { src: '../assets/videos/atla_agnikai.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
+        silver_3: { src: '../assets/videos/teentitans.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
+
+        silver_m1: { src: '../assets/videos/kimpossible.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
+        silver_m2: { src: '../assets/videos/atla_agnikai.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
+        silver_m3: { src: '../assets/videos/teentitans.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
+
+        // ico sphere area -> black_oled1
+        black_1: { src: '../assets/videos/arcane.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
+        black_2: { src: '../assets/videos/andor.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
+        black_3: { src: '../assets/videos/regularshow.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
+
+        black_m1: { src: '../assets/videos/arcane.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
+        black_m2: { src: '../assets/videos/andor.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
+        black_m3: { src: '../assets/videos/regularshow.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0 },
       };
+
       // Exact screen material name from Blender for each TV model
       const SCREEN_MATERIAL_BY_MODEL = {
-        oled_black: 'TVScreen_oled',
-        oled_silver: 'darkgrey_oled',
-        plastic_crt: 'TVScreen_black_crt',
-        // wood_crt: 'TVScreen',
-        old_crt_grey: 'greycrt',
-
-        // temporary test model
-        black_oled1: 'oled_screen', // change this if your Blender material has a different exact name
+        black_oled1: 'oled_screen',
+        silver_oled1: 'oled_screen_silver',
+        crt_tv: 'crt_screen',
+        crt_tvgrey: 'crt_screen_grey',
+        crt_tvsilver: 'crt_screen_silver',
       };
 
       const tvInteractables = [];
@@ -173,13 +200,17 @@
 
       function getScreenAspectForModel(modelName) {
         switch (modelName) {
-          // case 'wood_crt': return 4 / 3;
-          case 'plastic_crt': return 4 / 3;
-          case 'old_crt_grey': return 4 / 3;
-          case 'oled_silver': return 16 / 9;
-          case 'oled_black': return 16 / 9;
-          case 'black_oled1': return 16 / 9;
-          default: return 4 / 3;
+          case 'crt_tv':
+          case 'crt_tvgrey':
+          case 'crt_tvsilver':
+            return 4 / 3;
+
+          case 'black_oled1':
+          case 'silver_oled1':
+            return 16 / 9;
+
+          default:
+            return 4 / 3;
         }
       }
 
@@ -241,12 +272,8 @@
             screenAspect,
             cfg.fit ?? 'contain',
             cfg.rotationDeg ?? 0,
-            cfg.uvZoom ?? 1.0   // ← now actually passed in
+            cfg.uvZoom ?? 1.0
           );
-        });
-
-        video.addEventListener('loadeddata', () => {
-          console.log(`[TV ${tvId}] video loaded:`, videoPath);
         });
 
         video.addEventListener('error', (e) => {
@@ -436,13 +463,13 @@
       }
 
       // ── World layout ────────────────────────────────────────────────────────────
-      const START_POINT = new THREE.Vector3(200, 0, 200);
+      const START_POINT = new THREE.Vector3(-160, 0, 120);
 
       const wood_crt = {
         tvs: [
-          { id: 'wood_1', model: 'black_oled1', x: 211, y: 0, z: 205, ry: THREE.MathUtils.degToRad(176), scale: 4.0 },
-          { id: 'wood_2', model: 'black_oled1', x: 236, y: 0, z: 214, ry: THREE.MathUtils.degToRad(160), scale: 4.0 },
-          { id: 'wood_3', model: 'black_oled1', x: 221, y: 0, z: 237, ry: THREE.MathUtils.degToRad(24), scale: 4.0 },
+          { id: 'wood_1', model: 'crt_tvgrey', x: 211, y: 0, z: 205, ry: THREE.MathUtils.degToRad(176), scale: 5.0 },
+          { id: 'wood_2', model: 'crt_tvgrey', x: 236, y: 0, z: 214, ry: THREE.MathUtils.degToRad(160), scale: 5.0 },
+          { id: 'wood_3', model: 'crt_tvgrey', x: 221, y: 0, z: 237, ry: THREE.MathUtils.degToRad(24), scale: 5.0 },
         ],
         trees: [
           { model: 'dead_tree', x: 220, y: -0.1, z: 202, ry: THREE.MathUtils.degToRad(0), scale: 2.0 },
@@ -453,11 +480,12 @@
         ]
       };
 
+
       const plastic_crt = {
         tvs: [
-          { id: 'plastic_1', model: 'plastic_crt', x: 50, y: 0, z: 270, ry: THREE.MathUtils.degToRad(102), scale: 3.0 },
-          { id: 'plastic_2', model: 'plastic_crt', x: 60, y: 0, z: 250, ry: THREE.MathUtils.degToRad(158), scale: 3.0 },
-          { id: 'plastic_3', model: 'plastic_crt', x: 49, y: 0, z: 288, ry: THREE.MathUtils.degToRad(10), scale: 3.0 },
+          { id: 'plastic_1', model: 'crt_tv', x: 50, y: 0, z: 270, ry: THREE.MathUtils.degToRad(102), scale: 5.0 },
+          { id: 'plastic_2', model: 'crt_tv', x: 60, y: 0, z: 250, ry: THREE.MathUtils.degToRad(158), scale: 5.0 },
+          { id: 'plastic_3', model: 'crt_tv', x: 49, y: 0, z: 288, ry: THREE.MathUtils.degToRad(10), scale: 5.0 },
         ],
         trees: [
           { model: 'pine_tree_yellow', x: 50, y: 0, z: 252, ry: THREE.MathUtils.degToRad(0), scale: 1.7 },
@@ -470,9 +498,9 @@
 
       const old_crt_grey = {
         tvs: [
-          { id: 'grey_1', model: 'old_crt_grey', x: -118, y: 0, z: 246, ry: THREE.MathUtils.degToRad(290), scale: 3.0 },
-          { id: 'grey_2', model: 'old_crt_grey', x: -98, y: 0, z: 250, ry: THREE.MathUtils.degToRad(30), scale: 3.0 },
-          { id: 'grey_3', model: 'old_crt_grey', x: -94, y: 0, z: 231, ry: THREE.MathUtils.degToRad(130), scale: 3.0 },
+          { id: 'grey_1', model: 'crt_tvsilver', x: -118, y: 0, z: 246, ry: THREE.MathUtils.degToRad(290), scale: 5.0 },
+          { id: 'grey_2', model: 'crt_tvsilver', x: -98, y: 0, z: 250, ry: THREE.MathUtils.degToRad(30), scale: 5.0 },
+          { id: 'grey_3', model: 'crt_tvsilver', x: -94, y: 0, z: 231, ry: THREE.MathUtils.degToRad(130), scale: 5.0 },
         ],
         trees: [
           { model: 'ico_tree_yellow', x: -110, y: -0.5, z: 233, ry: THREE.MathUtils.degToRad(0), scale: 1.5 },
@@ -485,9 +513,9 @@
 
       const oled_silver = {
         tvs: [
-          { id: 'silver_1', model: 'oled_silver', x: -168, y: 0, z: 137, ry: THREE.MathUtils.degToRad(316), scale: 3.0 },
-          { id: 'silver_2', model: 'oled_silver', x: -142, y: 0, z: 117, ry: THREE.MathUtils.degToRad(110), scale: 3.0 },
-          { id: 'silver_3', model: 'oled_silver', x: -172, y: 0, z: 103, ry: THREE.MathUtils.degToRad(232), scale: 3.0 },
+          { id: 'silver_1', model: 'silver_oled1', x: -168, y: 0, z: 137, ry: THREE.MathUtils.degToRad(146), scale: 3.0 },
+          { id: 'silver_2', model: 'silver_oled1', x: -142, y: 0, z: 117, ry: THREE.MathUtils.degToRad(290), scale: 3.0 },
+          { id: 'silver_3', model: 'silver_oled1', x: -172, y: 0, z: 103, ry: THREE.MathUtils.degToRad(52), scale: 3.0 },
         ],
         trees: [
           { model: 'pine_tree', x: -162, y: 0, z: 97, ry: THREE.MathUtils.degToRad(0), scale: 1.7 },
@@ -500,9 +528,9 @@
 
       const oled_black = {
         tvs: [
-          { id: 'black_1', model: 'oled_black', x: -100, y: 0, z: -10, ry: THREE.MathUtils.degToRad(70), scale: 3.0 },
-          { id: 'black_2', model: 'oled_black', x: -112, y: 0, z: -25, ry: THREE.MathUtils.degToRad(200), scale: 3.0 },
-          { id: 'black_3', model: 'oled_black', x: -123, y: 0, z: -15, ry: THREE.MathUtils.degToRad(265), scale: 3.0 },
+          { id: 'black_1', model: 'black_oled1', x: -100, y: 0, z: -10, ry: THREE.MathUtils.degToRad(80), scale: 3.0 },
+          { id: 'black_2', model: 'black_oled1', x: -112, y: 0, z: -25, ry: THREE.MathUtils.degToRad(20), scale: 3.0 },
+          { id: 'black_3', model: 'black_oled1', x: -123, y: 0, z: -15, ry: THREE.MathUtils.degToRad(145), scale: 3.0 },
         ],
         trees: [
           { model: 'ico_tree', x: -108, y: 0, z: -28, ry: THREE.MathUtils.degToRad(0), scale: 1.5 },
@@ -751,13 +779,11 @@
       const TREE_BASE_PATH = '../assets/trees/';
 
       const modelManifest = {
-        // wood_crt: 'wood_crt.glb',
         black_oled1: 'black_oled1.glb',
-
-        plastic_crt: 'plastic_crt.glb',
-        old_crt_grey: 'old_crt_grey.glb',
-        oled_silver: 'oled_silver.glb',
-        oled_black: 'oled_black.glb',
+        silver_oled1: 'silver_oled1.glb',
+        crt_tv: 'crt_tv.glb',
+        crt_tvgrey: 'crt_tvgrey.glb',
+        crt_tvsilver: 'crt_tvsilver.glb',
       };
 
       const treeManifest = {
@@ -843,16 +869,14 @@
             const { video, texture, material, videoPath } = createVideoMaterial(videoConfig, entry.id, entry.model);
             const replaced = replaceScreenMaterialByModel(instance, entry.model, material);
 
-            console.log(`TV ${entry.id} | model=${entry.model} | video=${videoPath} | replacedMaterials=${replaced}`);
-
             if (replaced <= 0) {
               console.warn(
                 `No matching screen material found on ${entry.model} (${entry.id}). Expected: ${SCREEN_MATERIAL_BY_MODEL[entry.model]}`
               );
 
-              // Debug: print all material names on this TV model
               instance.traverse((child) => {
                 if (!child.isMesh || !child.material) return;
+
                 if (Array.isArray(child.material)) {
                   child.material.forEach((mat) => {
                     if (mat) console.log(`[${entry.id}] material:`, mat.name);
