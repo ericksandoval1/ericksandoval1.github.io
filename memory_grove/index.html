@@ -151,14 +151,7 @@
   </div>
 
   <div id="hint">WASD · MOUSE LOOK · SHIFT SPRINT · SPACE JUMP · E INTERACT</div>
-  <div id="panel">Starting…</div>
   <div id="error"></div>
-  <div id="legend">
-    White grid = 10-unit squares<br>
-    Red marker = TV target position<br>
-    Yellow pole = easier to spot<br>
-    Cyan disc = spawn point
-  </div>
 
   <script type="importmap">
 {
@@ -171,7 +164,6 @@
   <script type="module">
     import * as THREE from 'three';
 
-    const panel    = document.getElementById('panel');
     const errorBox = document.getElementById('error');
     const overlay  = document.getElementById('overlay');
     const hint     = document.getElementById('hint');
@@ -185,8 +177,6 @@
     const TEMP_RIGHT = new THREE.Vector3();
     const TEMP_TARGET = new THREE.Vector3();
     const TEMP_TO_TV = new THREE.Vector3();
-
-    function setPanel(text) { panel.textContent = text; }
 
     function showError(err) {
       console.error(err);
@@ -240,13 +230,6 @@
       );
       ground.rotation.x = -Math.PI / 2;
       scene.add(ground);
-      const spawnMarker = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.6, 0.6, 0.2, 24),
-        new THREE.MeshBasicMaterial({ color: 0x00ffff })
-      );
-      spawnMarker.position.set(0, 0.11, 0);
-      scene.add(spawnMarker);
-
       // ── TV video system ─────────────────────────────────────────────────────────
       const INTERACT_DISTANCE = 14;
       const TV_AUTO_OFF_MS = 30000;
@@ -294,17 +277,6 @@
 
       const tvInteractables = [];
       let hoveredTV = null;
-      let hudInfo = 'Starting…';
-
-      function setHudInfo(text) { hudInfo = text; }
-
-      function updatePanelText() {
-        if (!hoveredTV || !controls.isLocked) { panel.textContent = hudInfo; return; }
-        const state = hoveredTV.isOn ? 'ON' : 'OFF';
-        if (!hoveredTV.isOn) { panel.textContent = `${hudInfo} | [E] ${hoveredTV.id} ${state}`; return; }
-        const remain = Math.max(0, Math.ceil((hoveredTV.autoOffAt - performance.now()) / 1000));
-        panel.textContent = `${hudInfo} | [E] ${hoveredTV.id} ${state} | Auto-off in ${remain}s`;
-      }
 
       function getScreenAspectForModel(modelName) {
         switch (modelName) {
@@ -358,14 +330,6 @@
         });
       }
 
-      function logModelMaterials(instance, id) {
-        instance.traverse((child) => {
-          if (!child.isMesh || !child.material) return;
-          const mats = Array.isArray(child.material) ? child.material : [child.material];
-          mats.forEach((mat) => { if (mat) console.log(`[${id}] material:`, mat.name); });
-        });
-      }
-
       function replaceScreenMaterialByModel(root, modelName, videoMaterial) {
         const targetName = SCREEN_MATERIAL_BY_MODEL[modelName];
         if (!targetName) { console.warn(`No screen material mapping for model: ${modelName}`); return 0; }
@@ -385,38 +349,38 @@
         tvEntry.isOn = true;
 
         const video = tvEntry.video;
+        video.muted = false;
+        video.volume = 0.3;
 
         const doPlay = () => {
           const p = video.play();
           if (p !== undefined) {
             p.catch((err) => {
               const msg = String(err || '');
-              // AbortError happens when play() is interrupted — safe to ignore
               if (err?.name === 'AbortError' || msg.includes('aborted by the user agent')) return;
               console.warn(`Video play failed for ${tvEntry.id}:`, err);
             });
           }
         };
 
-        // If the video has enough data, play immediately.
-        // readyState >= 2 means at least the current frame is available
         if (video.readyState >= 2) {
           doPlay();
         } else {
-          // Video hasn't buffered yet — wait for canplay before attempting
           const onReady = () => {
             video.removeEventListener('canplay', onReady);
             if (tvEntry.isOn) doPlay();
           };
           video.addEventListener('canplay', onReady);
-          // Kick off a fresh load if the browser stalled it entirely
           if (video.readyState === 0) video.load();
         }
       }
 
       function turnOffTV(tvEntry) {
         if (!tvEntry || !tvEntry.isOn) return;
-        tvEntry.video.pause(); tvEntry.isOn = false; tvEntry.autoOffAt = 0;
+        tvEntry.video.pause();
+        tvEntry.video.muted = true;
+        tvEntry.isOn = false;
+        tvEntry.autoOffAt = 0;
       }
 
       function toggleTV(tvEntry) {
@@ -457,7 +421,9 @@
         }
       }
 
-      function stopAllTVs() { for (const tv of tvInteractables) turnOffTV(tv); }
+      function stopAllTVs() {
+        for (const tv of tvInteractables) turnOffTV(tv);
+      }
 
       function disposeTVSystem() {
         for (const tv of tvInteractables) {
@@ -838,35 +804,31 @@
           const slow = Math.sin(t * 0.5 + b.phase);
           const fast = Math.sin(t * 1.4 + b.phase + 1.2);
 
-          // Haze: gentle breathe between 0.7 and 1.0
-          b.haze.material.opacity = 0.7 + 0.3 * (0.5 + 0.5 * slow);
+          // Distance from camera to this beacon's ground center
+          const dx = camera.position.x - b.haze.position.x;
+          const dz = camera.position.z - b.haze.position.z;
+          const dist = Math.sqrt(dx * dx + dz * dz);
+
+          // Remap distance to a 0–1 proximity value.
+          // NEAR_DIST = full brightness, FAR_DIST = minimum brightness.
+          const NEAR_DIST = 30;
+          const FAR_DIST  = 220;
+          const proximity = 1 - Math.min(1, Math.max(0, (dist - NEAR_DIST) / (FAR_DIST - NEAR_DIST)));
+          // Ease it so the falloff feels smooth rather than linear
+          const eased = proximity * proximity;
+
+          // Haze: dim at distance (0.08), bright up close (0.9), plus slow pulse
+          const hazeBase = 0.08 + 0.82 * eased;
+          b.haze.material.opacity = hazeBase * (0.8 + 0.2 * (0.5 + 0.5 * slow));
           b.haze.position.y = b.hazeBaseY + slow * 0.6;
 
-          // Column: slightly faster flicker, stays bright
-          b.column.material.opacity = 0.65 + 0.35 * (0.5 + 0.5 * (slow * 0.7 + fast * 0.3));
+          // Column: stays more visible at range than haze (easier to spot from far)
+          // but still brightens noticeably as you approach
+          const colBase = 0.15 + 0.65 * eased;
+          b.column.material.opacity = colBase * (0.75 + 0.25 * (0.5 + 0.5 * (slow * 0.7 + fast * 0.3)));
           b.column.position.y = b.colBaseY + slow * 1.5;
         }
       }
-
-      // ── Placement markers ───────────────────────────────────────────────────────
-      function addPlacementMarkers() {
-        TV_GROUPS.forEach((group) => {
-          group.tvs.forEach(({ x = 0, y = 0, z = 0 }) => {
-            const marker = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.9, 0.9), new THREE.MeshBasicMaterial({ color: 0xff0000 }));
-            marker.position.set(x, y + 0.45, z);
-            scene.add(marker);
-            const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 2.5, 8), new THREE.MeshBasicMaterial({ color: 0xffff00 }));
-            pole.position.set(x, y + 1.25, z);
-            scene.add(pole);
-            const ring = new THREE.Mesh(new THREE.TorusGeometry(0.7, 0.06, 8, 24), new THREE.MeshBasicMaterial({ color: 0xffffff }));
-            ring.rotation.x = Math.PI / 2;
-            ring.position.set(x, y + 0.03, z);
-            scene.add(ring);
-          });
-        });
-      }
-
-      addPlacementMarkers();
 
       // ── Loaders ─────────────────────────────────────────────────────────────────
       const loader          = new GLTFLoader();
@@ -949,8 +911,7 @@
             const { video, texture, material, videoPath } = createVideoMaterial(videoConfig, entry.id, entry.model);
             const replaced = replaceScreenMaterialByModel(instance, entry.model, material);
             if (replaced <= 0) {
-              console.warn(`No matching screen material found on ${entry.model} (${entry.id}). Expected: ${SCREEN_MATERIAL_BY_MODEL[entry.model]}`);
-              logModelMaterials(instance, entry.id);
+              console.warn(`No screen material found on ${entry.model} (${entry.id})`);
             }
             const tvEntry = { id: entry.id, model: entry.model, wrapper, instance, videoPath, video, texture, material, isOn: false, autoOffAt: 0 };
             wrapper.userData.tvEntry = tvEntry;
@@ -1029,8 +990,6 @@
         loadingStatus.textContent = msg;
         loadingBar.style.width = `${pct}%`;
       }
-
-      // Returns a promise that resolves once loadedmetadata has fired on every
       // video, so UV fit is applied before the world is revealed. Times out after
       // 8 s per video so a stalled file never blocks the whole load.
       function waitForAllVideoMetadata() {
@@ -1074,11 +1033,6 @@
         await waitForAllVideoMetadata();
 
         setLoadingStatus('Ready.', 100);
-
-        setHudInfo(
-          `Ready | Colliders: ${colliders.length} | Trunks: ${treeTrunkColliders.length} | TVs: ${tvInteractables.length} | Path trees: ${PATH_TREES.length}`
-        );
-        updatePanelText();
 
         // Short pause so the bar visually hits 100% before fading
         await new Promise((r) => setTimeout(r, 400));
@@ -1135,26 +1089,17 @@
         }
         if (e.code === 'KeyE' && controls.isLocked) {
           const tv = getClosestLookedAtTV();
-          if (tv) { toggleTV(tv); updatePanelText(); }
+          if (tv) toggleTV(tv);
         }
       });
       document.addEventListener('keyup', (e) => { keys[e.code] = false; });
 
       // ── Animate ─────────────────────────────────────────────────────────────────
       const moveDir = new THREE.Vector3();
-      let prev = performance.now(), frames = 0, lastFpsTime = performance.now();
+      let prev = performance.now();
 
       function animate() {
         requestAnimationFrame(animate);
-        frames++;
-        const nowFps = performance.now();
-        if (nowFps - lastFpsTime >= 1000) {
-          camera.getWorldDirection(TEMP_FORWARD);
-          let lookDeg = THREE.MathUtils.radToDeg(Math.atan2(TEMP_FORWARD.x, TEMP_FORWARD.z));
-          if (lookDeg < 0) lookDeg += 360;
-          setHudInfo(`FPS: ${frames} | X: ${camera.position.x.toFixed(2)} | Y: ${camera.position.y.toFixed(2)} | Z: ${camera.position.z.toFixed(2)} | Angle: ${lookDeg.toFixed(1)}°`);
-          frames = 0; lastFpsTime = nowFps;
-        }
 
         const now   = performance.now();
         const delta = Math.min((now - prev) / 1000, 0.1);
@@ -1193,16 +1138,11 @@
         }
 
         updateTVInteraction();
-        updatePanelText();
         updateBeacons(now / 1000);
         renderer.render(scene, camera);
       }
 
       animate();
-
-      setInterval(() => {
-        console.log('Triangles:', renderer.info.render.triangles, 'Draw calls:', renderer.info.render.calls);
-      }, 1000);
 
       window.addEventListener('beforeunload', disposeTVSystem);
       window.addEventListener('resize', () => {
