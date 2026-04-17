@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Memory Grove</title>
+  <link rel="stylesheet" href="../css/bfa.css">
+  <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <div id="crosshair"></div>
+
+  <div id="overlay">
+    <h1>Memory Grove</h1>
+    <p>Click anywhere to enter</p>
+    <p>ESC to release</p>
+  </div>
+
+  <div id="hint">WASD · MOUSE LOOK · SHIFT SPRINT · SPACE JUMP · E INTERACT</div>
+  <div id="panel">Starting…</div>
+  <div id="error"></div>
+  <div id="legend">
+    White grid = 10-unit squares<br>
+    Red marker = TV target position<br>
+    Yellow pole = easier to spot<br>
+    Cyan disc = spawn point
+  </div>
+
+  <script type="importmap">
+{
+  "imports": {
+    "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.module.js"
+  }
+}
+</script>
+
+  <script type="module">
+    import * as THREE from 'three';
+
+    const panel = document.getElementById('panel');
+    const errorBox = document.getElementById('error');
+    const overlay = document.getElementById('overlay');
+    const hint = document.getElementById('hint');
+
+    const UP = new THREE.Vector3(0, 1, 0);
+    const TEMP_FORWARD = new THREE.Vector3();
+    const TEMP_RIGHT = new THREE.Vector3();
+    const TEMP_TARGET = new THREE.Vector3();
+    const TEMP_TO_TV = new THREE.Vector3();
+
+    function setPanel(text) {
+      panel.textContent = text;
+    }
+
+    function showError(err) {
+      console.error(err);
+      errorBox.style.display = 'block';
+      errorBox.textContent = String(err && err.stack ? err.stack : err);
+      setPanel('Error. Check red box.');
+    }
+
+    window.addEventListener('error', (e) => showError(e.error || e.message));
+    window.addEventListener('unhandledrejection', (e) => showError(e.reason));
+
+    try {
+      const { PointerLockControls } = await import(
+        'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/jsm/controls/PointerLockControls.js'
+      );
+
+      const { GLTFLoader } = await import(
+        'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/jsm/loaders/GLTFLoader.js'
+      );
+
+      // ── Renderer ────────────────────────────────────────────────────────────────
+      const renderer = new THREE.WebGLRenderer({ antialias: false });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.shadowMap.enabled = false;
+      renderer.outputEncoding = THREE.sRGBEncoding;
+      document.body.appendChild(renderer.domElement);
+
+      // ── Scene / Camera ──────────────────────────────────────────────────────────
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerHeight, 0.1, 500);
+
+      // ── Lights ──────────────────────────────────────────────────────────────────
+      scene.background = new THREE.Color(0xf0f7ff);
+      scene.fog = new THREE.Fog(0xffefe6, 40, 160);
+
+      scene.add(
+        new THREE.AmbientLight(0xffe3b0, 0.35),
+        new THREE.HemisphereLight(0xffc58a, 0x2b1d16, 0.45)
+      );
+
+      const sun = new THREE.DirectionalLight(0xff944d, 1.2);
+      sun.position.set(30, 35, 12);
+      scene.add(sun);
+
+      // ── Ground / helpers ────────────────────────────────────────────────────────
+      const ground = new THREE.Mesh(
+        new THREE.PlaneGeometry(800, 800),
+        new THREE.MeshLambertMaterial({ color: 0x4a7c3f })
+      );
+      ground.rotation.x = -Math.PI / 2;
+      scene.add(ground);
+
+      const grid = new THREE.GridHelper(800, 80, 0xffffff, 0x888888);
+      grid.position.y = 0.02;
+      scene.add(grid);
+      scene.add(new THREE.AxesHelper(20));
+
+      const spawnMarker = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.6, 0.6, 0.2, 24),
+        new THREE.MeshBasicMaterial({ color: 0x00ffff })
+      );
+      spawnMarker.position.set(0, 0.11, 0);
+      scene.add(spawnMarker);
+
+      // ── TV video system ─────────────────────────────────────────────────────────
+      const INTERACT_DISTANCE = 14;
+      const TV_AUTO_OFF_MS = 30000;
+
+      const TV_VIDEO_BY_ID = {
+        wood_1: { src: '../assets/videos/fullhouse.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.2, offsetX: 0.0, offsetY: 0.0 },
+        wood_2: { src: '../assets/videos/teentitans.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.2, offsetX: 0.1, offsetY: 0.0 },
+        wood_3: { src: '../assets/videos/courage.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0, offsetX: 0.0, offsetY: 0.0 },
+
+        wood_m1: { src: '../assets/videos/teentitans.mp4', rotationDeg: 90, fit: 'contain', uvZoom: 0.95, offsetX: 0.0, offsetY: 0.0 },
+        wood_m2: { src: '../assets/videos/fullhouse.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0, offsetX: 0.0, offsetY: 0.0 },
+        wood_m3: { src: '../assets/videos/courage.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 0.9, offsetX: 0.02, offsetY: 0.0 },
+
+        plastic_1: { src: '../assets/videos/spongebob_bowl.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.1, offsetX: 0.0, offsetY: -0.02 },
+        plastic_2: { src: '../assets/videos/spongebob_dutchman.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.5, offsetX: 0.2, offsetY: 0.0 },
+        plastic_3: { src: '../assets/videos/spongebob_dutchman.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.5, offsetX: 0.2, offsetY: 0.0 },
+
+        plastic_m1: { src: '../assets/videos/spongebob_bowl.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.1, offsetX: 0.0, offsetY: -0.02 },
+        plastic_m2: { src: '../assets/videos/spongebob_dutchman.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.5, offsetX: 0.2, offsetY: 0.0 },
+        plastic_m3: { src: '../assets/videos/spongebob_dutchman.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.5, offsetX: 0.2, offsetY: 0.0 },
+
+        grey_1: { src: '../assets/videos/spongebob_patrick.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.7, offsetX: 0.4, offsetY: 0.2 },
+        grey_2: { src: '../assets/videos/fairlyoddparents.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.4, offsetX: 0.22, offsetY: 0.02 },
+        grey_3: { src: '../assets/videos/jimmyneutron.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.5, offsetX: 0.3, offsetY: 0.1 },
+
+        grey_m1: { src: '../assets/videos/spongebob_patrick.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.7, offsetX: 0.4, offsetY: 0.2 },
+        grey_m2: { src: '../assets/videos/fairlyoddparents.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.4, offsetX: 0.22, offsetY: 0.02 },
+        grey_m3: { src: '../assets/videos/jimmyneutron.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.5, offsetX: 0.3, offsetY: 0.1 },
+
+        silver_1: { src: '../assets/videos/kimpossible.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0, offsetX: 0.0, offsetY: 0.3 },
+        silver_2: { src: '../assets/videos/atla_agnikai.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.15, offsetX: 0.07, offsetY: 0.3 },
+        silver_3: { src: '../assets/videos/teentitans.mp4', rotationDeg: 0, fit: 'cover', uvZoom: 1.0, offsetX: 0.0, offsetY: 0.0 },
+
+        silver_m1: { src: '../assets/videos/kimpossible.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0, offsetX: 0.0, offsetY: 0.3 },
+        silver_m2: { src: '../assets/videos/atla_agnikai.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.15, offsetX: 0.07, offsetY: 0.3 },
+        silver_m3: { src: '../assets/videos/teentitans.mp4', rotationDeg: 0, fit: 'cover', uvZoom: 1.5, offsetX: 0.0, offsetY: 0.5 },
+
+        black_1: { src: '../assets/videos/arcane.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.1, offsetX: 0.05, offsetY: 0.2 },
+        black_2: { src: '../assets/videos/andor.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0, offsetX: 0.0, offsetY: 0.0 },
+        black_3: { src: '../assets/videos/regularshow.mp4', rotationDeg: 0, fit: 'cover', uvZoom: 1.01, offsetX: 0.0, offsetY: 0.0 },
+
+        black_m1: { src: '../assets/videos/arcane.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.1, offsetX: 0.05, offsetY: 0.2 },
+        black_m2: { src: '../assets/videos/andor.mp4', rotationDeg: 0, fit: 'contain', uvZoom: 1.0, offsetX: 0.01, offsetY: 0.0 },
+        black_m3: { src: '../assets/videos/regularshow.mp4', rotationDeg: 0, fit: 'cover', uvZoom: 1.01, offsetX: 0.0, offsetY: 0.0 },
+      };
+
+      const SCREEN_MATERIAL_BY_MODEL = {
+        black_oled1: 'oled_screen',
+        silver_oled1: 'oled_screen_silver',
+        crt_tv: 'crt_screen',
+        crt_tvgrey: 'crt_screen_grey',
+        crt_tvsilver: 'crt_screen_silver',
+      };
+
+      const tvInteractables = [];
+      let hoveredTV = null;
+      let hudInfo = 'Starting…';
+
+      function setHudInfo(text) {
+        hudInfo = text;
+      }
+
+      function updatePanelText() {
+        if (!hoveredTV || !controls.isLocked) {
+          panel.textContent = hudInfo;
+          return;
+        }
+
+        const state = hoveredTV.isOn ? 'ON' : 'OFF';
+        if (!hoveredTV.isOn) {
+          panel.textContent = `${hudInfo} | [E] ${hoveredTV.id} ${state}`;
+          return;
+        }
+
+        const remain = Math.max(0, Math.ceil((hoveredTV.autoOffAt - performance.now()) / 1000));
+        panel.textContent = `${hudInfo} | [E] ${hoveredTV.id} ${state} | Auto-off in ${remain}s`;
+      }
+
+      function getScreenAspectForModel(modelName) {
+        switch (modelName) {
+          case 'crt_tv':
+          case 'crt_tvgrey':
+          case 'crt_tvsilver':
+            return 4 / 3;
+          case 'black_oled1':
+          case 'silver_oled1':
+            return 16 / 9;
+          default:
+            return 4 / 3;
+        }
+      }
+
+      function applyVideoTextureFit(
+        texture,
+        videoWidth,
+        videoHeight,
+        screenAspect,
+        fit = 'contain',
+        rotationDeg = 0,
+        uvZoom = 1.0,
+        offsetX = 0.0,
+        offsetY = 0.0
+      ) {
+        if (!videoWidth || !videoHeight) return;
+
+        let mediaAspect = videoWidth / videoHeight;
+        const rot = ((rotationDeg % 360) + 360) % 360;
+        if (rot === 90 || rot === 270) mediaAspect = videoHeight / videoWidth;
+
+        texture.center.set(0.5, 0.5);
+        texture.rotation = THREE.MathUtils.degToRad(rotationDeg);
+
+        let repeatX = 1;
+        let repeatY = 1;
+
+        if (fit === 'cover') {
+          if (mediaAspect > screenAspect) {
+            repeatX = screenAspect / mediaAspect;
+          } else {
+            repeatY = mediaAspect / screenAspect;
+          }
+        } else {
+          if (mediaAspect > screenAspect) {
+            repeatY = screenAspect / mediaAspect;
+          } else {
+            repeatX = mediaAspect / screenAspect;
+          }
+        }
+
+        repeatX *= uvZoom;
+        repeatY *= uvZoom;
+
+        texture.repeat.set(repeatX, repeatY);
+        texture.offset.set(
+          (1 - repeatX) * 0.5 + offsetX,
+          (1 - repeatY) * 0.5 + offsetY
+        );
+        texture.needsUpdate = true;
+      }
+
+      function createVideoMaterial(videoConfig, tvId, modelName) {
+        const videoPath = typeof videoConfig === 'string' ? videoConfig : videoConfig.src;
+        const cfg = typeof videoConfig === 'string' ? {} : videoConfig;
+
+        const video = document.createElement('video');
+        Object.assign(video, {
+          src: videoPath,
+          crossOrigin: 'anonymous',
+          loop: true,
+          muted: true,
+          playsInline: true,
+          preload: 'auto'
+        });
+        video.load();
+
+        const texture = new THREE.VideoTexture(video);
+        Object.assign(texture, {
+          encoding: THREE.sRGBEncoding,
+          minFilter: THREE.LinearFilter,
+          magFilter: THREE.LinearFilter,
+          generateMipmaps: false
+        });
+
+        video.addEventListener('loadedmetadata', () => {
+          applyVideoTextureFit(
+            texture,
+            video.videoWidth,
+            video.videoHeight,
+            getScreenAspectForModel(modelName),
+            cfg.fit ?? 'contain',
+            cfg.rotationDeg ?? 0,
+            cfg.uvZoom ?? 1.0,
+            cfg.offsetX ?? 0.0,
+            cfg.offsetY ?? 0.0
+          );
+        });
+
+        video.addEventListener('error', (e) => {
+          console.error(`[TV ${tvId}] video error:`, videoPath, e);
+        });
+
+        video.addEventListener('canplay', () => {
+          texture.needsUpdate = true;
+        });
+
+        return {
+          video,
+          texture,
+          material: new THREE.MeshBasicMaterial({ map: texture, toneMapped: false }),
+          videoPath
+        };
+      }
+
+      function forEachMeshMaterial(root, callback) {
+        root.traverse((child) => {
+          if (!child.isMesh || !child.material) return;
+          if (Array.isArray(child.material)) {
+            child.material = child.material.map((mat) => callback(mat, child));
+          } else {
+            child.material = callback(child.material, child);
+          }
+        });
+      }
+
+      function logModelMaterials(instance, id) {
+        instance.traverse((child) => {
+          if (!child.isMesh || !child.material) return;
+          const mats = Array.isArray(child.material) ? child.material : [child.material];
+          mats.forEach((mat) => {
+            if (mat) console.log(`[${id}] material:`, mat.name);
+          });
+        });
+      }
+
+      function replaceScreenMaterialByModel(root, modelName, videoMaterial) {
+        const targetName = SCREEN_MATERIAL_BY_MODEL[modelName];
+        if (!targetName) {
+          console.warn(`No screen material mapping for model: ${modelName}`);
+          return 0;
+        }
+
+        const targetLower = targetName.toLowerCase();
+        let replaced = 0;
+
+        forEachMeshMaterial(root, (mat) => {
+          if (mat && mat.name && mat.name.toLowerCase() === targetLower) {
+            replaced++;
+            return videoMaterial;
+          }
+          return mat;
+        });
+
+        return replaced;
+      }
+
+      function turnOnTV(tvEntry) {
+        if (!tvEntry) return;
+
+        tvEntry.autoOffAt = performance.now() + TV_AUTO_OFF_MS;
+        if (tvEntry.isOn) return;
+
+        console.log(`Turning ON TV: ${tvEntry.id}`, tvEntry.videoPath);
+        tvEntry.video.currentTime = 0;
+
+        const playPromise = tvEntry.video.play();
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => console.log(`Playing TV: ${tvEntry.id}`))
+            .catch((err) => {
+              const msg = String(err || '');
+              if (err?.name === 'AbortError' || msg.includes('aborted by the user agent')) return;
+              console.warn(`Video play failed for ${tvEntry.id}:`, err);
+            });
+        }
+
+        tvEntry.isOn = true;
+      }
+
+      function turnOffTV(tvEntry) {
+        if (!tvEntry || !tvEntry.isOn) return;
+        tvEntry.video.pause();
+        tvEntry.isOn = false;
+        tvEntry.autoOffAt = 0;
+      }
+
+      function toggleTV(tvEntry) {
+        if (!tvEntry) return;
+        tvEntry.isOn ? turnOffTV(tvEntry) : turnOnTV(tvEntry);
+      }
+
+      function getClosestLookedAtTV() {
+        const origin = camera.position;
+        camera.getWorldDirection(TEMP_FORWARD);
+
+        let best = null;
+        let bestScore = -Infinity;
+
+        for (const tv of tvInteractables) {
+          tv.wrapper.getWorldPosition(TEMP_TARGET);
+          TEMP_TARGET.y += 1.6;
+
+          TEMP_TO_TV.copy(TEMP_TARGET).sub(origin);
+          const dist = TEMP_TO_TV.length();
+          if (dist > INTERACT_DISTANCE) continue;
+
+          TEMP_TO_TV.normalize();
+          const dot = TEMP_FORWARD.dot(TEMP_TO_TV);
+
+          if (dot > 0.88) {
+            const score = dot - dist * 0.01;
+            if (score > bestScore) {
+              bestScore = score;
+              best = tv;
+            }
+          }
+        }
+
+        return best;
+      }
+
+      function updateTVInteraction() {
+        hoveredTV = controls.isLocked ? getClosestLookedAtTV() : null;
+        hint.textContent = hoveredTV
+          ? `WASD · MOUSE LOOK · SHIFT SPRINT · SPACE JUMP · [E] ${hoveredTV.isOn ? 'TURN OFF' : 'TURN ON'} ${hoveredTV.id}`
+          : 'WASD · MOUSE LOOK · SHIFT SPRINT · SPACE JUMP · E INTERACT';
+      }
+
+      function updateTVAutoOff(now) {
+        for (const tv of tvInteractables) {
+          if (tv.isOn && tv.autoOffAt > 0 && now >= tv.autoOffAt) turnOffTV(tv);
+        }
+      }
+
+      function stopAllTVs() {
+        for (const tv of tvInteractables) turnOffTV(tv);
+      }
+
+      function disposeTVSystem() {
+        for (const tv of tvInteractables) {
+          turnOffTV(tv);
+          tv.texture.dispose();
+          tv.material.dispose();
+          tv.video.removeAttribute('src');
+          tv.video.load();
+        }
+      }
+
+      // ── World layout ────────────────────────────────────────────────────────────
+      const START_POINT = new THREE.Vector3(0, 0, 0);
+
+      const wood_crt = {
+        tvs: [
+          { id: 'wood_1', model: 'crt_tvgrey', x: 211, y: 0, z: 205, ry: THREE.MathUtils.degToRad(176), scale: 5.0 },
+          { id: 'wood_2', model: 'crt_tvgrey', x: 236, y: 0, z: 214, ry: THREE.MathUtils.degToRad(160), scale: 5.0 },
+          { id: 'wood_3', model: 'crt_tvgrey', x: 221, y: 0, z: 237, ry: THREE.MathUtils.degToRad(24), scale: 5.0 },
+        ],
+        trees: [
+          { model: 'dead_tree', x: 220, y: -0.1, z: 202, ry: THREE.MathUtils.degToRad(0), scale: 2.0 },
+          { model: 'dead_tree2', x: 236, y: -1.5, z: 214, ry: THREE.MathUtils.degToRad(72), scale: 2.0 },
+          { model: 'dead_tree3', x: 230, y: -1.25, z: 234, ry: THREE.MathUtils.degToRad(144), scale: 2.0 },
+          { model: 'dead_tree4', x: 210, y: -0.1, z: 234, ry: THREE.MathUtils.degToRad(216), scale: 2.0 },
+          { model: 'dead_tree5', x: 204, y: -0.5, z: 214, ry: THREE.MathUtils.degToRad(288), scale: 2.0 },
+        ]
+      };
+
+      const plastic_crt = {
+        tvs: [
+          { id: 'plastic_1', model: 'crt_tv', x: 50, y: 0, z: 270, ry: THREE.MathUtils.degToRad(102), scale: 5.0 },
+          { id: 'plastic_2', model: 'crt_tv', x: 60, y: 0, z: 250, ry: THREE.MathUtils.degToRad(158), scale: 5.0 },
+          { id: 'plastic_3', model: 'crt_tv', x: 49, y: 0, z: 288, ry: THREE.MathUtils.degToRad(10), scale: 5.0 },
+        ],
+        trees: [
+          { model: 'pine_tree_yellow', x: 50, y: 0, z: 252, ry: THREE.MathUtils.degToRad(0), scale: 1.7 },
+          { model: 'pine_tree_yellow2', x: 66, y: 0, z: 264, ry: THREE.MathUtils.degToRad(72), scale: 1.7 },
+          { model: 'pine_tree_yellow', x: 60, y: 0, z: 284, ry: THREE.MathUtils.degToRad(144), scale: 1.7 },
+          { model: 'pine_tree_yellow3', x: 40, y: 0, z: 284, ry: THREE.MathUtils.degToRad(216), scale: 1.7 },
+          { model: 'pine_tree_yellow4', x: 34, y: 0, z: 264, ry: THREE.MathUtils.degToRad(288), scale: 1.7 },
+        ]
+      };
+
+      const old_crt_grey = {
+        tvs: [
+          { id: 'grey_1', model: 'crt_tvsilver', x: -118, y: 0, z: 246, ry: THREE.MathUtils.degToRad(290), scale: 5.0 },
+          { id: 'grey_2', model: 'crt_tvsilver', x: -98, y: 0, z: 250, ry: THREE.MathUtils.degToRad(30), scale: 5.0 },
+          { id: 'grey_3', model: 'crt_tvsilver', x: -94, y: 0, z: 231, ry: THREE.MathUtils.degToRad(130), scale: 5.0 },
+        ],
+        trees: [
+          { model: 'ico_tree_yellow', x: -110, y: -0.5, z: 233, ry: THREE.MathUtils.degToRad(0), scale: 1.5 },
+          { model: 'ico_tree_yellow2', x: -99, y: -2, z: 241, ry: THREE.MathUtils.degToRad(72), scale: 1.5 },
+          { model: 'ico_tree_yellow3', x: -103, y: -2, z: 254, ry: THREE.MathUtils.degToRad(144), scale: 1.5 },
+          { model: 'ico_tree_yellow', x: -117, y: -2, z: 254, ry: THREE.MathUtils.degToRad(216), scale: 1.5 },
+          { model: 'ico_tree_yellow2', x: -121, y: -2, z: 241, ry: THREE.MathUtils.degToRad(288), scale: 1.5 },
+        ]
+      };
+
+      const oled_silver = {
+        tvs: [
+          { id: 'silver_1', model: 'silver_oled1', x: -168, y: 0, z: 137, ry: THREE.MathUtils.degToRad(146), scale: 3.0 },
+          { id: 'silver_2', model: 'silver_oled1', x: -142, y: 0, z: 117, ry: THREE.MathUtils.degToRad(290), scale: 3.0 },
+          { id: 'silver_3', model: 'silver_oled1', x: -172, y: 0, z: 103, ry: THREE.MathUtils.degToRad(52), scale: 3.0 },
+        ],
+        trees: [
+          { model: 'pine_tree', x: -162, y: 0, z: 97, ry: THREE.MathUtils.degToRad(0), scale: 1.7 },
+          { model: 'pine_tree2', x: -146, y: 0, z: 109, ry: THREE.MathUtils.degToRad(72), scale: 1.7 },
+          { model: 'pine_tree3', x: -152, y: 0, z: 129, ry: THREE.MathUtils.degToRad(144), scale: 1.7 },
+          { model: 'pine_tree', x: -172, y: 0, z: 129, ry: THREE.MathUtils.degToRad(216), scale: 1.7 },
+          { model: 'pine_tree4', x: -178, y: 0, z: 109, ry: THREE.MathUtils.degToRad(288), scale: 1.7 },
+        ]
+      };
+
+      const oled_black = {
+        tvs: [
+          { id: 'black_1', model: 'black_oled1', x: -100, y: 0, z: -10, ry: THREE.MathUtils.degToRad(80), scale: 3.0 },
+          { id: 'black_2', model: 'black_oled1', x: -112, y: 0, z: -25, ry: THREE.MathUtils.degToRad(20), scale: 3.0 },
+          { id: 'black_3', model: 'black_oled1', x: -123, y: 0, z: -15, ry: THREE.MathUtils.degToRad(145), scale: 3.0 },
+        ],
+        trees: [
+          { model: 'ico_tree', x: -108, y: 0, z: -28, ry: THREE.MathUtils.degToRad(0), scale: 1.5 },
+          { model: 'ico_tree2', x: -97, y: 0, z: -20, ry: THREE.MathUtils.degToRad(72), scale: 1.5 },
+          { model: 'ico_tree3', x: -101, y: 0, z: -7, ry: THREE.MathUtils.degToRad(144), scale: 1.5 },
+          { model: 'ico_tree', x: -115, y: 0, z: -7, ry: THREE.MathUtils.degToRad(216), scale: 1.5 },
+          { model: 'ico_tree2', x: -119, y: 0, z: -20, ry: THREE.MathUtils.degToRad(288), scale: 1.5 },
+        ]
+      };
+
+      let PATH_TREES = [];
+
+      // ── Collision data ──────────────────────────────────────────────────────────
+      const colliders = [];
+      const treeTrunkColliders = [];
+      const PLAYER_RADIUS = 0.5;
+      const PLAYER_HEIGHT = 1.7;
+      const JUMP_VELOCITY = 10;
+      const GRAVITY = 30;
+
+      function addColliderFromObject(object3D, expand = 0) {
+        object3D.updateMatrixWorld(true);
+        const box = new THREE.Box3().setFromObject(object3D);
+        if (box.isEmpty()) return;
+
+        if (expand !== 0) {
+          box.min.x -= expand;
+          box.min.z -= expand;
+          box.max.x += expand;
+          box.max.z += expand;
+        }
+
+        colliders.push(box);
+      }
+
+      function mirrorGroup(group) {
+        const mirror = (e) => ({
+          ...e,
+          id: e.id ? `${e.id.replace(/_\d+$/, '')}_m${(e.id.match(/(\d+)$/) || [, ''])[1]}` : undefined,
+          x: -e.x,
+          z: -e.z,
+          ry: (e.ry ?? 0) + Math.PI
+        });
+
+        return {
+          tvs: group.tvs.map(mirror),
+          trees: group.trees.map(mirror)
+        };
+      }
+
+      const TV_GROUPS_BASE = [wood_crt, plastic_crt, old_crt_grey, oled_silver, oled_black];
+      const TV_GROUPS_MIRROR = [oled_black, oled_silver, old_crt_grey, plastic_crt, wood_crt].map(mirrorGroup);
+      const TV_GROUPS = [...TV_GROUPS_BASE, ...TV_GROUPS_MIRROR];
+
+      function groupCenter(group) {
+        const { tvs } = group;
+        return new THREE.Vector3(
+          tvs.reduce((sum, t) => sum + t.x, 0) / tvs.length,
+          0,
+          tvs.reduce((sum, t) => sum + t.z, 0) / tvs.length
+        );
+      }
+
+      function getProtectedPositions() {
+        const pts = [];
+        for (const group of TV_GROUPS) {
+          for (const tv of group.tvs) pts.push({ x: tv.x, z: tv.z, radius: 14 });
+          for (const tree of group.trees) pts.push({ x: tree.x, z: tree.z, radius: 9 });
+        }
+        return pts;
+      }
+
+      function isPathTreePositionClear(x, z, protectedPoints) {
+        return !protectedPoints.some((p) => {
+          const dx = x - p.x;
+          const dz = z - p.z;
+          return dx * dx + dz * dz < p.radius * p.radius;
+        });
+      }
+
+      function treeYOffsetFor(model) {
+        if (model === 'dead_tree2') return -1.5;
+        if (model === 'dead_tree3') return -1.25;
+        if (model === 'dead_tree5') return -0.5;
+        if (model.startsWith('dead_tree')) return -0.1;
+        if (model === 'ico_tree_yellow2' || model === 'ico_tree_yellow3') return -2;
+        if (model === 'ico_tree_yellow') return -0.5;
+        return 0;
+      }
+
+      function treeScaleFor(model) {
+        if (model.startsWith('dead_tree')) return 2.0;
+        if (model.startsWith('ico_tree')) return 1.1;
+        if (model.startsWith('pine_tree')) return 1.7;
+        return 2.0;
+      }
+
+      const PATH_GROUPS_BASE = [oled_black, oled_silver, old_crt_grey, plastic_crt, wood_crt];
+      const PATH_GROUPS_MIRROR = PATH_GROUPS_BASE.map(mirrorGroup);
+
+      const PATH_SEGMENT_MODELS = [
+        ['ico_tree', 'ico_tree2', 'ico_tree3', 'pine_tree', 'pine_tree2', 'pine_tree3'],
+        ['pine_tree', 'pine_tree2', 'pine_tree3', 'ico_tree_yellow', 'ico_tree_yellow2', 'ico_tree_yellow3'],
+        ['ico_tree_yellow', 'ico_tree_yellow2', 'ico_tree_yellow3', 'ico_tree_orange', 'ico_tree_orange2', 'ico_tree_orange3', 'pine_tree_orange', 'pine_tree_orange2', 'pine_tree_orange3'],
+        ['pine_tree_orange', 'pine_tree_orange2', 'pine_tree_orange3', 'ico_tree_orange', 'ico_tree_orange2', 'ico_tree_orange3', 'pine_tree_orange', 'ico_tree_orange', 'pine_tree_orange2', 'ico_tree_orange2', 'dead_tree', 'dead_tree2', 'dead_tree3', 'dead_tree4', 'dead_tree5', 'dead_tree', 'dead_tree2', 'dead_tree4'],
+      ];
+
+      function buildPathTreesAlongCenters(centerGroups, segmentModelLists, options = {}) {
+        const result = [];
+        if (centerGroups.length < 2) return result;
+
+        const centers = centerGroups.map(groupCenter);
+        const protectedPoints = getProtectedPositions();
+        const {
+          samplesPerSegment: defaultSamples = 8,
+          segmentSampleCounts = [],
+          sideOffsetA = 8,
+          sideOffsetB = 14
+        } = options;
+
+        for (let seg = 0; seg < centers.length - 1; seg++) {
+          const curve = new THREE.CatmullRomCurve3(
+            [centers[seg], centers[seg + 1]],
+            false,
+            'catmullrom',
+            0.0
+          );
+
+          const models = segmentModelLists[seg] ?? ['ico_tree'];
+          const samples = segmentSampleCounts[seg] ?? defaultSamples;
+
+          for (let i = 0; i <= samples; i++) {
+            const u = i / samples;
+            const p = curve.getPointAt(u);
+            const tangent = curve.getTangentAt(u).normalize();
+            const normal = new THREE.Vector3(-tangent.z, 0, tangent.x).normalize();
+            const sign = i % 2 === 0 ? 1 : -1;
+
+            const offsets = [
+              sign * sideOffsetA, -sign * sideOffsetA,
+              sign * sideOffsetB, -sign * sideOffsetB,
+              sign * (sideOffsetB + 8), -sign * (sideOffsetB + 8),
+              sign * (sideOffsetB + 16), -sign * (sideOffsetB + 16),
+            ];
+
+            let chosenPos = null;
+            for (const offset of offsets) {
+              const testPos = p.clone().addScaledVector(normal, offset);
+              if (isPathTreePositionClear(testPos.x, testPos.z, protectedPoints)) {
+                chosenPos = testPos;
+                break;
+              }
+            }
+
+            if (!chosenPos) continue;
+
+            const model = models[i % models.length];
+            result.push({
+              model,
+              x: chosenPos.x,
+              y: treeYOffsetFor(model),
+              z: chosenPos.z,
+              ry: Math.atan2(tangent.x, tangent.z),
+              scale: treeScaleFor(model)
+            });
+          }
+        }
+
+        return result;
+      }
+
+      PATH_TREES = [
+        ...buildPathTreesAlongCenters(PATH_GROUPS_BASE, PATH_SEGMENT_MODELS, {
+          samplesPerSegment: 8,
+          segmentSampleCounts: [8, 8, 8, 28],
+          sideOffsetA: 10,
+          sideOffsetB: 18
+        }),
+        ...buildPathTreesAlongCenters(PATH_GROUPS_MIRROR, PATH_SEGMENT_MODELS, {
+          samplesPerSegment: 8,
+          segmentSampleCounts: [8, 8, 8, 22],
+          sideOffsetA: 10,
+          sideOffsetB: 18
+        }),
+      ];
+
+      for (const group of TV_GROUPS) {
+        for (const tree of group.trees) tree.scale = treeScaleFor(tree.model);
+      }
+      for (const tree of PATH_TREES) tree.scale = treeScaleFor(tree.model);
+
+      function addTreeTrunkCylinder(x, z, radius = 0.55) {
+        treeTrunkColliders.push({ x, z, radius });
+      }
+
+      function collidesAtPosition(position) {
+        const playerBox = new THREE.Box3(
+          new THREE.Vector3(position.x - PLAYER_RADIUS, position.y - PLAYER_HEIGHT, position.z - PLAYER_RADIUS),
+          new THREE.Vector3(position.x + PLAYER_RADIUS, position.y, position.z + PLAYER_RADIUS)
+        );
+
+        if (colliders.some((box) => playerBox.intersectsBox(box))) return true;
+
+        return treeTrunkColliders.some((trunk) => {
+          const dx = position.x - trunk.x;
+          const dz = position.z - trunk.z;
+          return dx * dx + dz * dz < (PLAYER_RADIUS + trunk.radius) ** 2;
+        });
+      }
+
+      // ── Placement markers ───────────────────────────────────────────────────────
+      function addPlacementMarkers() {
+        TV_GROUPS.forEach((group) => {
+          group.tvs.forEach(({ x = 0, y = 0, z = 0 }) => {
+            const marker = new THREE.Mesh(
+              new THREE.BoxGeometry(0.9, 0.9, 0.9),
+              new THREE.MeshBasicMaterial({ color: 0xff0000 })
+            );
+            marker.position.set(x, y + 0.45, z);
+            scene.add(marker);
+
+            const pole = new THREE.Mesh(
+              new THREE.CylinderGeometry(0.05, 0.05, 2.5, 8),
+              new THREE.MeshBasicMaterial({ color: 0xffff00 })
+            );
+            pole.position.set(x, y + 1.25, z);
+            scene.add(pole);
+
+            const ring = new THREE.Mesh(
+              new THREE.TorusGeometry(0.7, 0.06, 8, 24),
+              new THREE.MeshBasicMaterial({ color: 0xffffff })
+            );
+            ring.rotation.x = Math.PI / 2;
+            ring.position.set(x, y + 0.03, z);
+            scene.add(ring);
+          });
+        });
+      }
+
+      addPlacementMarkers();
+
+      // ── Load models ─────────────────────────────────────────────────────────────
+      const loader = new GLTFLoader();
+      const MODEL_BASE_PATH = '../assets/tv_models/';
+      const TREE_BASE_PATH = '../assets/trees/';
+
+      const modelManifest = {
+        black_oled1: 'black_oled1.glb',
+        silver_oled1: 'silver_oled1.glb',
+        crt_tv: 'crt_tv.glb',
+        crt_tvgrey: 'crt_tvgrey.glb',
+        crt_tvsilver: 'crt_tvsilver.glb',
+      };
+
+      const treeManifest = {
+        ico_tree: 'ico_tree.glb', ico_tree2: 'ico_tree2.glb', ico_tree3: 'ico_tree3.glb',
+        ico_tree_orange: 'ico_tree_orange.glb', ico_tree_orange2: 'ico_tree_orange2.glb', ico_tree_orange3: 'ico_tree_orange3.glb',
+        pine_tree: 'pine_tree.glb', pine_tree2: 'pine_tree2.glb', pine_tree3: 'pine_tree3.glb', pine_tree4: 'pine_tree4.glb',
+        pine_tree_yellow: 'pine_tree_yellow.glb', pine_tree_yellow2: 'pine_tree_yellow2.glb', pine_tree_yellow3: 'pine_tree_yellow3.glb', pine_tree_yellow4: 'pine_tree_yellow4.glb',
+        ico_tree_yellow: 'ico_tree_yellow.glb', ico_tree_yellow2: 'ico_tree_yellow2.glb', ico_tree_yellow3: 'ico_tree_yellow3.glb',
+        pine_tree_orange: 'pine_tree_orange.glb', pine_tree_orange2: 'pine_tree_orange2.glb', pine_tree_orange3: 'pine_tree_orange3.glb', pine_tree_orange4: 'pine_tree_orange4.glb',
+        dead_tree: 'dead_tree.glb', dead_tree2: 'dead_tree2.glb',
+        dead_tree3: 'dead_tree3.glb', dead_tree4: 'dead_tree4.glb', dead_tree5: 'dead_tree5.glb',
+      };
+
+      const treeModels = {};
+      const tvModels = {};
+
+      function loadGLTF(url) {
+        return new Promise((resolve, reject) => loader.load(url, resolve, undefined, reject));
+      }
+
+      function setAllMeshesDoubleSided(root) {
+        root.traverse((child) => {
+          if (!child.isMesh) return;
+          const mats = Array.isArray(child.material) ? child.material : [child.material];
+          mats.forEach((mat) => {
+            if (mat) mat.side = THREE.DoubleSide;
+          });
+        });
+      }
+
+      function centerAndGroundModel(modelRoot) {
+        modelRoot.updateMatrixWorld(true);
+        const box = new THREE.Box3().setFromObject(modelRoot);
+        if (box.isEmpty()) return;
+
+        const center = new THREE.Vector3();
+        box.getCenter(center);
+        modelRoot.position.x -= center.x;
+        modelRoot.position.z -= center.z;
+        modelRoot.position.y -= box.min.y;
+      }
+
+      function placeModel(source, entry, { doubleSided = false, isTV = false } = {}) {
+        const wrapper = new THREE.Group();
+        wrapper.position.set(entry.x ?? 0, entry.y ?? 0, entry.z ?? 0);
+        wrapper.rotation.set(0, entry.ry ?? 0, 0);
+        wrapper.scale.setScalar(entry.scale ?? 1);
+
+        const instance = source.clone(true);
+        if (doubleSided) setAllMeshesDoubleSided(instance);
+
+        if (isTV) {
+          centerAndGroundModel(instance);
+        } else {
+          const box = new THREE.Box3().setFromObject(instance);
+          const center = new THREE.Vector3();
+          box.getCenter(center);
+          instance.position.x -= center.x;
+          instance.position.z -= center.z;
+          instance.position.y -= box.min.y;
+        }
+
+        wrapper.add(instance);
+        scene.add(wrapper);
+        return { wrapper, instance };
+      }
+
+      function addModelPlacements() {
+        TV_GROUPS.forEach((group, gi) => {
+          group.tvs.forEach((entry, ti) => {
+            const source = tvModels[entry.model];
+            if (!source) {
+              console.warn(`Missing TV model for group ${gi}, tv ${ti}: ${entry.model}`);
+              return;
+            }
+
+            const { wrapper, instance } = placeModel(source, entry, { doubleSided: true, isTV: true });
+            addColliderFromObject(wrapper, 0.3);
+
+            const videoConfig = TV_VIDEO_BY_ID[entry.id];
+            if (!videoConfig) {
+              console.warn(`No video assigned for TV id: ${entry.id}`);
+              return;
+            }
+
+            const { video, texture, material, videoPath } = createVideoMaterial(videoConfig, entry.id, entry.model);
+            const replaced = replaceScreenMaterialByModel(instance, entry.model, material);
+
+            if (replaced <= 0) {
+              console.warn(
+                `No matching screen material found on ${entry.model} (${entry.id}). Expected: ${SCREEN_MATERIAL_BY_MODEL[entry.model]}`
+              );
+              logModelMaterials(instance, entry.id);
+            }
+
+            const tvEntry = {
+              id: entry.id,
+              model: entry.model,
+              wrapper,
+              instance,
+              videoPath,
+              video,
+              texture,
+              material,
+              isOn: false,
+              autoOffAt: 0,
+            };
+
+            wrapper.userData.tvEntry = tvEntry;
+            tvInteractables.push(tvEntry);
+          });
+        });
+      }
+
+      function addTreePlacements(entries, modelBank) {
+        for (const entry of entries) {
+          const source = modelBank[entry.model];
+          if (!source) {
+            console.warn(`Missing tree model: ${entry.model}`);
+            continue;
+          }
+          placeModel(source, entry);
+          addTreeTrunkCylinder(entry.x, entry.z, 0.55);
+        }
+      }
+
+      async function loadAllModels() {
+        setPanel('Loading TV models...');
+
+        const loadBank = async (manifest, basePath, bank) => {
+          await Promise.all(
+            Object.entries(manifest).map(([key, file]) =>
+              loadGLTF(`${basePath}${file}`)
+                .then((gltf) => { bank[key] = gltf.scene; })
+                .catch((err) => console.error(`Error loading ${file}:`, err))
+            )
+          );
+        };
+
+        await loadBank(modelManifest, MODEL_BASE_PATH, tvModels);
+        addModelPlacements();
+
+        await loadBank(treeManifest, TREE_BASE_PATH, treeModels);
+        addTreePlacements(TV_GROUPS.flatMap((g) => g.trees), treeModels);
+        addTreePlacements(PATH_TREES, treeModels);
+
+        setHudInfo(
+          `Ready | TV Colliders: ${colliders.length} | Tree Trunks: ${treeTrunkColliders.length} | TVs: ${tvInteractables.length}`
+        );
+        updatePanelText();
+      }
+
+      loadAllModels();
+
+      // ── Controls ────────────────────────────────────────────────────────────────
+      const controls = new PointerLockControls(camera, renderer.domElement);
+      scene.add(controls.getObject());
+
+      camera.position.set(START_POINT.x, 1.7, START_POINT.z);
+      camera.lookAt(0, 1.7, 0);
+
+      document.addEventListener('click', () => controls.lock());
+
+      controls.addEventListener('lock', () => {
+        overlay.style.display = 'none';
+      });
+
+      controls.addEventListener('unlock', () => {
+        overlay.style.display = 'flex';
+        stopAllTVs();
+      });
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) stopAllTVs();
+      });
+
+      let verticalVelocity = 0;
+      let isOnGround = true;
+      const keys = {};
+
+      document.addEventListener('keydown', (e) => {
+        if (e.repeat) return;
+
+        keys[e.code] = true;
+
+        if (e.code === 'Space') {
+          e.preventDefault();
+          if (controls.isLocked && isOnGround) {
+            verticalVelocity = JUMP_VELOCITY;
+            isOnGround = false;
+          }
+        }
+
+        if (e.code === 'KeyE' && controls.isLocked) {
+          const tv = getClosestLookedAtTV();
+          if (tv) {
+            toggleTV(tv);
+            updatePanelText();
+          }
+        }
+      });
+
+      document.addEventListener('keyup', (e) => {
+        keys[e.code] = false;
+      });
+
+      // ── Animate ─────────────────────────────────────────────────────────────────
+      const moveDir = new THREE.Vector3();
+      let prev = performance.now();
+      let frames = 0;
+      let lastFpsTime = performance.now();
+
+      function animate() {
+        requestAnimationFrame(animate);
+
+        frames++;
+        const nowFps = performance.now();
+        if (nowFps - lastFpsTime >= 1000) {
+          camera.getWorldDirection(TEMP_FORWARD);
+          let lookDeg = THREE.MathUtils.radToDeg(Math.atan2(TEMP_FORWARD.x, TEMP_FORWARD.z));
+          if (lookDeg < 0) lookDeg += 360;
+
+          setHudInfo(
+            `FPS: ${frames} | X: ${camera.position.x.toFixed(2)} | Y: ${camera.position.y.toFixed(2)} | Z: ${camera.position.z.toFixed(2)} | Angle: ${lookDeg.toFixed(1)}°`
+          );
+          frames = 0;
+          lastFpsTime = nowFps;
+        }
+
+        const now = performance.now();
+        const delta = Math.min((now - prev) / 1000, 0.1);
+        prev = now;
+
+        updateTVAutoOff(now);
+
+        if (controls.isLocked) {
+          const speed = (keys.ShiftLeft || keys.ShiftRight) ? 25 : 15;
+          moveDir.set(0, 0, 0);
+
+          if (keys.KeyW || keys.ArrowUp) moveDir.z -= 1;
+          if (keys.KeyS || keys.ArrowDown) moveDir.z += 1;
+          if (keys.KeyA || keys.ArrowLeft) moveDir.x -= 1;
+          if (keys.KeyD || keys.ArrowRight) moveDir.x += 1;
+
+          if (moveDir.lengthSq() > 0) {
+            moveDir.normalize();
+
+            const moveAmountForward = -moveDir.z * speed * delta;
+            const moveAmountRight = moveDir.x * speed * delta;
+
+            camera.getWorldDirection(TEMP_FORWARD);
+            TEMP_FORWARD.y = 0;
+            TEMP_FORWARD.normalize();
+
+            TEMP_RIGHT.crossVectors(TEMP_FORWARD, UP).normalize();
+
+            const tryForward = camera.position.clone().addScaledVector(TEMP_FORWARD, moveAmountForward);
+            if (!collidesAtPosition(tryForward)) controls.moveForward(moveAmountForward);
+
+            const tryRight = camera.position.clone().addScaledVector(TEMP_RIGHT, moveAmountRight);
+            if (!collidesAtPosition(tryRight)) controls.moveRight(moveAmountRight);
+          }
+
+          verticalVelocity -= GRAVITY * delta;
+          camera.position.y += verticalVelocity * delta;
+
+          if (camera.position.y <= PLAYER_HEIGHT) {
+            camera.position.y = PLAYER_HEIGHT;
+            verticalVelocity = 0;
+            isOnGround = true;
+          }
+        }
+
+        updateTVInteraction();
+        updatePanelText();
+        renderer.render(scene, camera);
+      }
+
+      animate();
+
+      setInterval(() => {
+        console.log('Triangles:', renderer.info.render.triangles, 'Draw calls:', renderer.info.render.calls);
+      }, 1000);
+
+      window.addEventListener('beforeunload', disposeTVSystem);
+
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+
+    } catch (err) {
+      showError(err);
+    }
+  </script>
+</body>
+
+</html>
