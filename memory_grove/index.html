@@ -6,125 +6,24 @@
   <title>Memory Grove</title>
   <link rel="stylesheet" href="../css/bfa.css">
   <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-  <style>
-    /* ── Loading screen ──────────────────────────────────────────────────── */
-    #loading-screen {
-      position: fixed;
-      inset: 0;
-      z-index: 100;
-      background: #0a0a0a;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: opacity 0.8s ease;
-    }
-    #loading-screen.fade-out {
-      opacity: 0;
-      pointer-events: none;
-    }
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const themes = [
+      "✦ ❋ ⊹ ✺ ✶ ✺ ⊹ ❋ ✦",
+      "⚙️ ⌘ ▓▒░ 01 ⌂ 01 ▓▒░ ⌘ ⚙️",
+        "♡ ❀ ✿ ☁︎ ღ ☁︎ ✿ ❀ ♡",
+        "∞ ⟁ ∴ △ ⌾ △ ∴ ⟁ ∞",
+        "☍ ⚡ ⌬ ≡ ≈ ≡ ⌬ ⚡ ☍"
+      ];
+    
+      let i = 0;
+      setInterval(() => {
+        document.title = themes[i];
+        i = (i + 1) % themes.length;
+      }, 1000); 
+    });
+    </script> 
 
-    #loading-inner {
-      text-align: center;
-      font-family: 'Share Tech Mono', monospace;
-      color: #e8dcc8;
-      max-width: 480px;
-      padding: 2rem;
-    }
-
-    #loading-title {
-      /* ── EDIT: main title on loading screen ── */
-      font-family: 'VT323', monospace;
-      font-size: clamp(3rem, 8vw, 5.5rem);
-      letter-spacing: 0.05em;
-      color: #f0e6c8;
-      margin: 0 0 0.25rem;
-      text-shadow: 0 0 24px rgba(255, 180, 80, 0.35);
-    }
-
-    #loading-subtitle {
-      /* ── EDIT: subtitle line ── */
-      font-size: 0.85rem;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: #a89070;
-      margin: 0 0 0.5rem;
-    }
-
-    #loading-author {
-      /* ── EDIT: your name / course info ── */
-      font-size: 0.75rem;
-      letter-spacing: 0.1em;
-      color: #6a5a45;
-      margin: 0 0 2.5rem;
-    }
-
-    #loading-bar-wrap {
-      width: 100%;
-      height: 2px;
-      background: #2a2018;
-      border-radius: 1px;
-      margin-bottom: 1rem;
-      overflow: hidden;
-    }
-
-    #loading-bar {
-      height: 100%;
-      width: 0%;
-      background: #c8a060;
-      border-radius: 1px;
-      transition: width 0.3s ease;
-    }
-
-    #loading-status {
-      /* live status text — updated by JS, no need to edit */
-      font-size: 0.7rem;
-      letter-spacing: 0.15em;
-      color: #6a5a45;
-      margin: 0;
-      min-height: 1.2em;
-    }
-
-    /* ── Enter screen (shown after load) ─────────────────────────────────── */
-    #overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 50;
-      background: rgba(10, 8, 5, 0.78);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      backdrop-filter: blur(4px);
-    }
-
-    #overlay-inner {
-      text-align: center;
-      font-family: 'Share Tech Mono', monospace;
-      color: #e8dcc8;
-    }
-
-    #overlay-inner h1 {
-      /* ── EDIT: title shown on enter screen ── */
-      font-family: 'VT323', monospace;
-      font-size: clamp(3rem, 8vw, 5.5rem);
-      letter-spacing: 0.05em;
-      color: #f0e6c8;
-      margin: 0 0 1.5rem;
-      text-shadow: 0 0 24px rgba(255, 180, 80, 0.35);
-    }
-
-    .overlay-hint {
-      font-size: 0.8rem;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: #a89070;
-      margin: 0.4rem 0;
-    }
-
-    .overlay-hint.small {
-      font-size: 0.65rem;
-      color: #6a5a45;
-    }
-  </style>
 </head>
 
 <body>
@@ -135,7 +34,7 @@
     <div id="loading-inner">
       <h1 id="loading-title">Memory Grove</h1>
       <p id="loading-subtitle">an interactive environment</p>
-      <p id="loading-author">Erick · BFA Digital Media Art · SJSU 2025</p>
+      <p id="loading-author">Erick Sandoval · BFA Digital Media Art · SJSU 2026</p>
       <div id="loading-bar-wrap"><div id="loading-bar"></div></div>
       <p id="loading-status">Initializing…</p>
     </div>
@@ -209,9 +108,7 @@
       const camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerHeight, 0.1, 500);
 
       // ── Lights ──────────────────────────────────────────────────────────────────
-      // Evening / night palette
-      // sky: deep blue-grey | fog: dark navy | ambient: dim blue-purple
-      // moon: cool desaturated blue-white | hemi: cold sky above, near-black ground below
+
       scene.background = new THREE.Color(0x08090f);
       scene.fog = new THREE.Fog(0x0d1020, 30, 130);
       scene.add(
