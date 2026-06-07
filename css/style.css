@@ -7,7 +7,7 @@
 
   /* Change this one to test colors */
 --accent-color: #FFD166;
-  --footer-color: lavenderblush;
+--footer-color: lavenderblush;
   --thumbnail-bg: #111;
 }
 
@@ -30,11 +30,14 @@ body {
 a {
   color: var(--text-color);
   text-decoration: none;
+  transition: color 0.3s ease, text-shadow 0.3s ease;
 }
 
 a:hover {
   color: var(--accent-color);
-  text-decoration: underline;
+  text-shadow: 0 0 8px var(--accent-color);
+    text-decoration: underline;
+
 }
 
 p {
